@@ -1252,12 +1252,21 @@ async function enrichWithOSM(coords, r) {
       cuisine: tags.cuisine || "",
       priceRange: tags["price:range"] || tags.price || tags.cost || ""
     };
-    if (seen.has(normalize(item.name))) return;
-    // Try match curated
+    // Try match curated PRIMEIRO (mesmo se ja' visto, pra poder enriquecer cuisine/price)
     const cur = type === "hotel" ? findCuratedHotel(item) : findCuratedPlace(item);
-    if (cur && seen.has(normalize(cur.name))) return;
+    const itemNorm = normalize(item.name);
+    const curNorm = cur ? normalize(cur.name) : null;
+    // Se ja' temos esse lugar (curado ou OSM), enriquece in-place com cuisine/priceRange OSM
+    const existingNorm = (curNorm && seen.has(curNorm)) ? curNorm : (seen.has(itemNorm) ? itemNorm : null);
+    if (existingNorm) {
+      const existing = currentResults.find(x => normalize(x.name) === existingNorm);
+      if (existing) {
+        if (!existing.cuisine && item.cuisine) { existing.cuisine = item.cuisine; added++; }
+        if (!existing.priceRange && item.priceRange) { existing.priceRange = item.priceRange; added++; }
+      }
+      return;
+    }
     if (cur) {
-      // Merge: curated wins por padrao, mas pega cuisine/price do OSM se curated nao tiver
       currentResults.push({
         ...cur,
         type: type === "hotel" ? "hotel" : cur.type,
@@ -1268,15 +1277,15 @@ async function enrichWithOSM(coords, r) {
         cuisine: cur.cuisine || item.cuisine,
         priceRange: cur.priceRange || item.priceRange
       });
-      seen.add(normalize(cur.name));
+      seen.add(curNorm);
     } else {
       currentResults.push({ ...item, distance: dist(coords, item.coords), curated: null, rating: null, desc: "" });
-      seen.add(normalize(item.name));
+      seen.add(itemNorm);
     }
     added++;
   });
   if (added > 0) {
-    renderResults(); // re-render com OSM adicionados
+    renderResults(); // re-render com OSM adicionados/enriquecidos
   }
 }
 
