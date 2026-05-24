@@ -319,6 +319,15 @@
   .badge.rating-low { background: #e9e6f0; color: var(--muted); }
   .badge.price { background: var(--purple-light); color: var(--purple); }
   .badge.cuisine { background: rgba(201,163,93,0.18); color: #8a6a25; }
+  .back-link-btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: var(--purple); color: white;
+    border: none; border-radius: 10px;
+    padding: 8px 14px; font-size: 13px; font-weight: 700;
+    cursor: pointer; margin-bottom: 10px;
+  }
+  .back-link-btn:hover { background: var(--purple-dark); }
+  .focus-hint { font-size: 11px; color: var(--muted); margin-bottom: 8px; text-align: center; }
   .badge.no-rating { background: #f3f0f9; color: var(--muted); font-style: italic; }
   .badge.curated { background: var(--purple); color: white; }
   .place-desc { font-size: 11px; color: var(--muted); margin-top: 4px; font-style: italic; }
@@ -929,6 +938,7 @@ let currentCenter = null;
 let centerType = null;
 const ALL_TYPES = ['hotel', 'cafe', 'bakery', 'restaurant'];
 let activeFilters = new Set(ALL_TYPES);
+let focusedItem = null;
 
 const searchInput = document.getElementById('searchInput');
 const autocomplete = document.getElementById('autocomplete');
@@ -981,6 +991,8 @@ document.querySelectorAll('.nav-item').forEach(btn => {
       if (activeFilters.has(f)) activeFilters.delete(f);
       else activeFilters.add(f);
     }
+    // Sair do modo foco se filtrar (o item focado pode sumir do filtro)
+    if (focusedItem) { focusedItem = null; clearRoute(); }
     updateFilterButtons();
     if (currentResults.length) renderResults();
   });
@@ -1317,6 +1329,7 @@ async function runSearch(name, coords) {
   errorBox.innerHTML = '';
   currentCenter = { name, coords };
   centerType = detectSearchType(name, coords);
+  focusedItem = null; // reset foco em nova busca
   const subEl = document.getElementById('modeSubtitle');
   if (subEl) subEl.textContent = name;
   // Esconde os chips de lugares populares quando ja' existe uma busca ativa
@@ -1352,6 +1365,70 @@ async function runSearch(name, coords) {
     console.error(err);
     panel.innerHTML = `<div class="error-box">Erro: ${err.message}.</div>`;
   }
+}
+
+function renderPlaceCard(container, r, idx) {
+  const card = document.createElement('div');
+  card.className = "place-card" + (r.curated ? " curated" : "") + (r.type === "hotel" ? " hotel" : "");
+  let typeBadge = '';
+  if (r.type === "cafe") typeBadge = `<span class="badge cafe">Café</span>`;
+  else if (r.type === "bakery") typeBadge = `<span class="badge bakery">Bakery</span>`;
+  else if (r.type === "restaurant") typeBadge = `<span class="badge restaurant">Restaurante</span>`;
+  else typeBadge = `<span class="badge hotel">${r.curated ? r.curated.stars + '★' : 'Hotel'}</span>`;
+  const distBadge = `<span class="badge distance">${fmtKm(r.distance)} · ${walkMin(r.distance)} min</span>`;
+  let ratingBadge = '';
+  if (r.type === "hotel" && r.curated) {
+    const cls = r.curated.booking >= 9.0 ? 'rating-high' : (r.curated.booking >= 8.5 ? 'rating' : 'rating-low');
+    ratingBadge = `<span class="badge ${cls}">Booking ${r.curated.booking}/10</span>`;
+  } else if (r.rating) {
+    const cls = r.rating >= 4.6 ? 'rating-high' : 'rating';
+    ratingBadge = `<span class="badge ${cls}">⭐ ${r.rating}/5</span>`;
+  } else {
+    ratingBadge = `<span class="badge no-rating">sem nota</span>`;
+  }
+  let priceBadge = '';
+  if (r.type === "hotel" && r.curated) priceBadge = `<span class="badge price">$${r.curated.min}-${r.curated.max}</span>`;
+  else if (r.priceRange) {
+    const pr = formatPriceRange(r.priceRange);
+    if (pr) priceBadge = `<span class="badge price">${pr}</span>`;
+  }
+  let cuisineBadge = '';
+  if (r.type === "restaurant" && r.cuisine) {
+    const c = formatCuisine(r.cuisine);
+    if (c) cuisineBadge = `<span class="badge cuisine">${c}</span>`;
+  }
+  const descHtml = (r.curated && r.curated.desc) ? `<div class="place-desc">"${r.curated.desc}"</div>` : (r.desc ? `<div class="place-desc">"${r.desc}"</div>` : '');
+  const addrText = r.address || (r.curated ? r.curated.addr : '');
+  const areaText = (r.type === "hotel" && r.curated) ? ` · ${r.curated.area}` : '';
+  const addrHtml = addrText ? `<div class="place-meta">${addrText}${areaText}</div>` : '';
+  const bookingLink = r.type === "hotel" ? `<a href="https://www.booking.com/searchresults.html?ss=${encodeURIComponent(r.name + ' New York')}" target="_blank">🏨 Booking</a>` : '';
+  const googleLink = `<a href="https://www.google.com/search?q=${encodeURIComponent(r.name + ' New York')}" target="_blank">🔍 Google</a>`;
+  const dirLink = `<a href="https://www.google.com/maps/dir/${currentCenter.coords[0]},${currentCenter.coords[1]}/${r.coords[0]},${r.coords[1]}" target="_blank">🗺️ Direções</a>`;
+  card.innerHTML = `<div class="place-name">${idx}. ${r.name}</div>${addrHtml}<div class="badge-row">${typeBadge}${cuisineBadge}${ratingBadge}${priceBadge}${distBadge}</div>${descHtml}<div class="place-links">${bookingLink}${googleLink}${dirLink}</div>`;
+  card.addEventListener('click', (e) => {
+    if (e.target.tagName === 'A' || e.target.tagName === 'BUTTON') return;
+    // Foca o item: lista colapsa pra so este card, mapa centraliza e desenha rota
+    focusedItem = r;
+    if (!mapEl.classList.contains('expanded')) setMapExpanded(true);
+    setTimeout(() => {
+      map.flyTo(r.coords, 16, { duration: 0.5 });
+      if (userLocation) {
+        // Fit pra user + destino
+        const b = L.latLngBounds([userLocation, r.coords]);
+        setTimeout(() => map.fitBounds(b, { padding: [60, 60] }), 600);
+      }
+    }, 340);
+    const marker = activeMarkers.find(m => {
+      const ll = m.getLatLng();
+      return Math.abs(ll.lat - r.coords[0]) < 0.0001 && Math.abs(ll.lng - r.coords[1]) < 0.0001;
+    });
+    if (marker) marker.openPopup();
+    if (userLocation) drawRoute(userLocation, r.coords, r.name);
+    renderResults(); // re-renderiza em modo foco
+    // Scroll pro topo do painel pra ver o mapa + card focado
+    setTimeout(() => document.getElementById('mainContent')?.scrollTo({ top: 0, behavior: 'smooth' }), 100);
+  });
+  container.appendChild(card);
 }
 
 function renderResults() {
@@ -1432,6 +1509,28 @@ function renderResults() {
     <option value="price" ${currentSort==='price'?'selected':''}>Menor preço</option>
   </select></div>`;
 
+  // Modo foco: ao clicar num card, isola ele na tela (com mapa + rota) + botao Voltar
+  if (focusedItem) {
+    const focusedRendered = filtered.find(r => r.name === focusedItem.name && r.coords[0] === focusedItem.coords[0]) || focusedItem;
+    panel.innerHTML = `<h2>📍 ${currentCenter.name}</h2>
+      <button class="back-link-btn" id="backToListBtn">↩ Voltar à lista (${filtered.length} lugares)</button>
+      <div class="focus-hint">Mapa acima mostra a rota a pé${userLocation ? '' : ' (toque "Minha localização" pra ver a rota)'}.</div>
+      <div id="placesList"></div>`;
+    document.getElementById('backToListBtn').addEventListener('click', () => {
+      focusedItem = null;
+      clearRoute();
+      renderResults();
+      if (currentResults.length) {
+        const b = L.latLngBounds(filtered.map(r => r.coords));
+        if (userLocation) b.extend(userLocation);
+        map.fitBounds(b, { padding: [40, 40] });
+      }
+    });
+    const placesListFoc = document.getElementById('placesList');
+    renderPlaceCard(placesListFoc, focusedRendered, 1);
+    return;
+  }
+
   panel.innerHTML = `<h2>📍 ${currentCenter.name}</h2><div class="panel-info">${stats}</div>${tabsHtml}${sortHtml}<div id="placesList"></div>`;
   const placesList = document.getElementById('placesList');
 
@@ -1440,61 +1539,7 @@ function renderResults() {
     return;
   }
 
-  filtered.forEach((r, idx) => {
-    const card = document.createElement('div');
-    card.className = "place-card" + (r.curated ? " curated" : "") + (r.type === "hotel" ? " hotel" : "");
-    let typeBadge = '';
-    if (r.type === "cafe") typeBadge = `<span class="badge cafe">Café</span>`;
-    else if (r.type === "bakery") typeBadge = `<span class="badge bakery">Bakery</span>`;
-    else if (r.type === "restaurant") typeBadge = `<span class="badge restaurant">Restaurante</span>`;
-    else typeBadge = `<span class="badge hotel">${r.curated ? r.curated.stars + '★' : 'Hotel'}</span>`;
-    const distBadge = `<span class="badge distance">${fmtKm(r.distance)} · ${walkMin(r.distance)} min</span>`;
-    let ratingBadge = '';
-    if (r.type === "hotel" && r.curated) {
-      const cls = r.curated.booking >= 9.0 ? 'rating-high' : (r.curated.booking >= 8.5 ? 'rating' : 'rating-low');
-      ratingBadge = `<span class="badge ${cls}">Booking ${r.curated.booking}/10</span>`;
-    } else if (r.rating) {
-      const cls = r.rating >= 4.6 ? 'rating-high' : 'rating';
-      ratingBadge = `<span class="badge ${cls}">⭐ ${r.rating}/5</span>`;
-    } else {
-      ratingBadge = `<span class="badge no-rating">sem nota</span>`;
-    }
-    let priceBadge = '';
-    if (r.type === "hotel" && r.curated) priceBadge = `<span class="badge price">$${r.curated.min}-${r.curated.max}</span>`;
-    else if (r.priceRange) {
-      const pr = formatPriceRange(r.priceRange);
-      if (pr) priceBadge = `<span class="badge price">${pr}</span>`;
-    }
-    let cuisineBadge = '';
-    if (r.type === "restaurant" && r.cuisine) {
-      const c = formatCuisine(r.cuisine);
-      if (c) cuisineBadge = `<span class="badge cuisine">${c}</span>`;
-    }
-    const descHtml = (r.curated && r.curated.desc) ? `<div class="place-desc">"${r.curated.desc}"</div>` : (r.desc ? `<div class="place-desc">"${r.desc}"</div>` : '');
-    const addrText = r.address || (r.curated ? r.curated.addr : '');
-    const areaText = (r.type === "hotel" && r.curated) ? ` · ${r.curated.area}` : '';
-    const addrHtml = addrText ? `<div class="place-meta">${addrText}${areaText}</div>` : '';
-    const bookingLink = r.type === "hotel" ? `<a href="https://www.booking.com/searchresults.html?ss=${encodeURIComponent(r.name + ' New York')}" target="_blank">🏨 Booking</a>` : '';
-    const googleLink = `<a href="https://www.google.com/search?q=${encodeURIComponent(r.name + ' New York')}" target="_blank">🔍 Google</a>`;
-    const dirLink = `<a href="https://www.google.com/maps/dir/${currentCenter.coords[0]},${currentCenter.coords[1]}/${r.coords[0]},${r.coords[1]}" target="_blank">🗺️ Direções</a>`;
-    card.innerHTML = `<div class="place-name">${idx + 1}. ${r.name}</div>${addrHtml}<div class="badge-row">${typeBadge}${cuisineBadge}${ratingBadge}${priceBadge}${distBadge}</div>${descHtml}<div class="place-links">${bookingLink}${googleLink}${dirLink}</div>`;
-    card.addEventListener('click', (e) => {
-      if (e.target.tagName === 'A' || e.target.tagName === 'BUTTON') return;
-      // Auto-expand map so user can see the result
-      if (!mapEl.classList.contains('expanded')) setMapExpanded(true);
-      setTimeout(() => map.flyTo(r.coords, 17, { duration: 0.5 }), 340);
-      const marker = activeMarkers.find(m => {
-        const ll = m.getLatLng();
-        return Math.abs(ll.lat - r.coords[0]) < 0.0001 && Math.abs(ll.lng - r.coords[1]) < 0.0001;
-      });
-      if (marker) marker.openPopup();
-      // If user has shared location, draw walking route
-      if (userLocation) {
-        drawRoute(userLocation, r.coords, r.name);
-      }
-    });
-    placesList.appendChild(card);
-  });
+  filtered.forEach((r, idx) => renderPlaceCard(placesList, r, idx + 1));
 
   panel.querySelectorAll('.tab').forEach(t => {
     t.addEventListener('click', () => { currentFilter = t.dataset.filter; renderResults(); });
@@ -1610,6 +1655,7 @@ function runTopRanking() {
   clearMarkers();
   clearRoute();
   errorBox.innerHTML = '';
+  focusedItem = null;
   setTimeout(() => map.invalidateSize(), 50);
 
   // Top: cafes + bakeries dos curados, sort por rating desc
