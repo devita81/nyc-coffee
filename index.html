@@ -848,10 +848,23 @@ function makeIcon(type, label, isCurated, isCenter) {
 }
 
 // ===================== State =====================
-const APP_VERSION = "v11";
-const APP_DATE = "24/mai";
 const versionPillEl = document.getElementById('versionPill');
-if (versionPillEl) versionPillEl.textContent = APP_VERSION + " · " + APP_DATE;
+function setVersionPill(text) {
+  if (versionPillEl) versionPillEl.textContent = text;
+}
+setVersionPill("carregando…");
+
+fetch('version.json', { cache: 'no-store' })
+  .then(r => r.ok ? r.json() : null)
+  .then(v => {
+    if (!v || !v.deployedAt) { setVersionPill("dev"); return; }
+    const d = new Date(v.deployedAt);
+    const dia = d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', timeZone: 'America/Sao_Paulo' });
+    const hora = d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', timeZone: 'America/Sao_Paulo' });
+    const sha = v.commit ? ' #' + v.commit : '';
+    setVersionPill(dia + ' ' + hora + sha);
+  })
+  .catch(() => setVersionPill("offline"));
 
 let mode = "hotel";
 let currentResults = [];

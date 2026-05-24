@@ -2,10 +2,10 @@
 // Estratégia: cache-first para app shell, network-first para APIs,
 // stale-while-revalidate para tiles do mapa (offline parcial).
 
-const CACHE_VERSION = "nyc-coffee-v11";
-const APP_SHELL = "nyc-coffee-shell-v11";
-const RUNTIME = "nyc-coffee-runtime-v11";
-const TILES = "nyc-coffee-tiles-v11";
+const CACHE_VERSION = "nyc-coffee-v12";
+const APP_SHELL = "nyc-coffee-shell-v12";
+const RUNTIME = "nyc-coffee-runtime-v12";
+const TILES = "nyc-coffee-tiles-v12";
 
 const SHELL_ASSETS = [
   "./",
@@ -60,7 +60,8 @@ self.addEventListener("fetch", (event) => {
     url.hostname.includes("overpass.kumi.systems") ||
     url.hostname.includes("lz4.overpass-api.de") ||
     url.hostname.includes("z.overpass-api.de") ||
-    url.hostname.includes("routing.openstreetmap.de")
+    url.hostname.includes("routing.openstreetmap.de") ||
+    url.pathname.endsWith("/version.json")
   ) {
     event.respondWith(
       fetch(req).catch(() => new Response(JSON.stringify({ elements: [], error: "offline" }), {
