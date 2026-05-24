@@ -203,6 +203,24 @@
     font-size: 11px; color: var(--muted); margin-top: 4px;
     letter-spacing: 0.04em; text-transform: uppercase; font-weight: 600;
   }
+  .mode-subtitle.route {
+    text-transform: none; letter-spacing: 0;
+    font-size: 13px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+    color: var(--ink-soft);
+  }
+  .mode-subtitle .route-from {
+    background: var(--green-bg); color: var(--purple); font-weight: 700;
+    padding: 2px 8px; border-radius: 6px;
+    border: 1px solid var(--border);
+  }
+  .mode-subtitle .route-arrow {
+    color: var(--gold-deep); font-weight: 800; font-size: 14px;
+  }
+  .mode-subtitle .route-to {
+    background: linear-gradient(135deg, #e7dac3, #c9a35d); color: white; font-weight: 700;
+    padding: 2px 8px; border-radius: 6px;
+    box-shadow: var(--shadow-1);
+  }
 
   /* Search */
   .search-input-wrap {
@@ -1490,7 +1508,11 @@ async function runSearch(name, coords) {
   centerType = detectSearchType(name, coords);
   focusedItem = null; // reset foco em nova busca
   const subEl = document.getElementById('modeSubtitle');
-  if (subEl) subEl.textContent = name;
+  if (subEl) { subEl.classList.remove('route'); subEl.innerHTML = ''; subEl.textContent = name; }
+  const tEl = document.getElementById('modeTitle');
+  if (tEl) tEl.textContent = 'Próximo de';
+  const icEl = document.getElementById('modeHeaderIcon');
+  if (icEl) icEl.textContent = '📍';
   // Esconde os chips de lugares populares quando ja' existe uma busca ativa
   if (presetsBlock) presetsBlock.style.display = 'none';
   // Reset estado do Top NYC quando faz busca normal
@@ -1577,6 +1599,17 @@ function focusOnPlace(r) {
   focusedItem = r;
   const routeOrigin = userLocation || (currentCenter ? currentCenter.coords : null);
   const originName = userLocation ? 'Você' : (currentCenter ? currentCenter.name.replace(/^📍\s*/, '').replace(/^🏆\s*/, '') : null);
+  // Atualiza o mode header: origem -> destino com destaque tipografico
+  const titleEl = document.getElementById('modeTitle');
+  const subEl = document.getElementById('modeSubtitle');
+  const iconEl = document.getElementById('modeHeaderIcon');
+  if (titleEl) titleEl.textContent = 'Rota a pé';
+  if (iconEl) iconEl.textContent = '🚶';
+  if (subEl) {
+    const origin = originName || 'Origem';
+    subEl.classList.add('route');
+    subEl.innerHTML = `<span class="route-from">${origin}</span><span class="route-arrow">→</span><span class="route-to">${r.name}</span>`;
+  }
   if (!mapEl.classList.contains('expanded')) setMapExpanded(true);
   setTimeout(() => {
     map.flyTo(r.coords, 16, { duration: 0.5 });
@@ -1691,6 +1724,17 @@ function renderResults() {
     document.getElementById('backToListBtn').addEventListener('click', () => {
       focusedItem = null;
       clearRoute();
+      // Restaura mode header
+      const t = document.getElementById('modeTitle');
+      const s = document.getElementById('modeSubtitle');
+      const ic = document.getElementById('modeHeaderIcon');
+      if (t) t.textContent = currentCenter && currentCenter.name && currentCenter.name.startsWith('🏆') ? 'Próximo de' : 'Próximo de';
+      if (ic) ic.textContent = '📍';
+      if (s) {
+        s.classList.remove('route');
+        s.innerHTML = '';
+        s.textContent = currentCenter ? currentCenter.name : '';
+      }
       renderResults();
       if (currentResults.length) {
         const b = L.latLngBounds(filtered.map(r => r.coords));
@@ -1864,7 +1908,11 @@ function runTopRanking() {
   }));
 
   const subEl = document.getElementById('modeSubtitle');
-  if (subEl) subEl.textContent = centerName;
+  if (subEl) { subEl.classList.remove('route'); subEl.innerHTML = ''; subEl.textContent = centerName; }
+  const tEl2 = document.getElementById('modeTitle');
+  if (tEl2) tEl2.textContent = 'Próximo de';
+  const icEl2 = document.getElementById('modeHeaderIcon');
+  if (icEl2) icEl2.textContent = '🏆';
   if (presetsBlock) presetsBlock.style.display = 'none';
 
   topBtn.classList.add('active');
