@@ -201,7 +201,19 @@
   }
 
   /* Quick actions in search card */
-  .quick-row { margin-top: 10px; display: flex; gap: 6px; flex-wrap: wrap; }
+  .quick-row { margin-bottom: 12px; display: flex; gap: 6px; }
+  .quick-row .quick-btn { flex: 1; padding: 12px; font-size: 14px; }
+  .or-divider {
+    display: flex; align-items: center; gap: 10px;
+    margin: 4px 0 10px; color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em;
+  }
+  .or-divider::before, .or-divider::after {
+    content: ""; flex: 1; height: 1px; background: var(--border);
+  }
+  .presets-label {
+    font-size: 11px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;
+    margin-top: 14px; margin-bottom: 6px;
+  }
   .quick-btn {
     background: var(--purple-light); color: var(--purple);
     border: none; border-radius: 16px;
@@ -443,16 +455,20 @@
 
   <!-- Search card -->
   <div class="card" id="searchCard">
+    <div class="quick-row">
+      <button id="nearMeBtn" class="quick-btn">📍 Usar minha localização</button>
+    </div>
+    <div class="or-divider">ou busque um endereço</div>
     <div class="search-input-wrap">
       <span class="search-icon">🔍</span>
-      <input type="text" id="searchInput" class="search-input" placeholder="Buscar hotel, café, bakery ou restaurante…" autocomplete="off"/>
+      <input type="text" id="searchInput" class="search-input" placeholder="Hotel, café, bakery, endereço…" autocomplete="off"/>
       <button id="searchBtn" class="search-btn">Buscar</button>
       <div id="autocomplete" class="autocomplete"></div>
     </div>
-    <div class="quick-row">
-      <button id="nearMeBtn" class="quick-btn">📍 Perto de mim</button>
+    <div id="presetsBlock">
+      <div class="presets-label">Lugares populares</div>
+      <div class="preset-chips" id="presetsRow"></div>
     </div>
-    <div class="preset-chips" id="presetsRow"></div>
     <div id="errorBox"></div>
   </div>
 
@@ -474,13 +490,6 @@
       <div class="filter-control">
         <input type="range" id="ratingFilter" min="0" max="50" step="1" value="0"/>
         <span class="filter-value" id="ratingFilterValue">Todas</span>
-      </div>
-    </div>
-    <div class="filter-row" id="filterPriceGroup" style="display:none">
-      <label class="filter-label">Preço máx</label>
-      <div class="filter-control">
-        <input type="range" id="priceFilter" min="100" max="2000" step="50" value="2000"/>
-        <span class="filter-value" id="priceFilterValue">Qualquer</span>
       </div>
     </div>
     <label class="toggle-row">
@@ -896,12 +905,10 @@ const radiusValue = document.getElementById('radiusValue');
 const presetsRow = document.getElementById('presetsRow');
 const ratingFilter = document.getElementById('ratingFilter');
 const ratingFilterValue = document.getElementById('ratingFilterValue');
-const priceFilter = document.getElementById('priceFilter');
-const priceFilterValue = document.getElementById('priceFilterValue');
 const onlyRated = document.getElementById('onlyRated');
 const resetFilters = document.getElementById('resetFilters');
 const filterStatus = document.getElementById('filterStatus');
-const filterPriceGroup = document.getElementById('filterPriceGroup');
+const presetsBlock = document.getElementById('presetsBlock');
 
 // Multi-select handler: bottom nav filtra categorias.
 // Modelo: cada categoria comeca ATIVA. Click apaga/liga.
@@ -926,9 +933,6 @@ function updateFilterButtons() {
       if (activeFilters.has(f)) btn.classList.add('active');
     }
   });
-  // Price slider so' visivel quando filtrando Hoteis
-  const showPrice = activeFilters.has('hotel');
-  if (filterPriceGroup) filterPriceGroup.style.display = showPrice ? '' : 'none';
   updateRatingFilterLabel();
 }
 document.querySelectorAll('.nav-item').forEach(btn => {
@@ -956,8 +960,6 @@ function updateModeUI() {
 function resetFilterValues() {
   ratingFilter.value = 0;
   updateRatingFilterLabel();
-  priceFilter.value = 2000;
-  priceFilterValue.textContent = "Qualquer";
   onlyRated.checked = true;
 }
 
@@ -1018,13 +1020,15 @@ function renderPresets() {
   });
 }
 
-radius.addEventListener('input', () => { radiusValue.textContent = radius.value + ' m'; });
-ratingFilter.addEventListener('input', () => { updateRatingFilterLabel(); if (currentResults.length) renderResults(); });
-priceFilter.addEventListener('input', () => {
-  const v = parseInt(priceFilter.value);
-  priceFilterValue.textContent = v >= 2000 ? "Qualquer" : "≤ $" + v;
-  if (currentResults.length) renderResults();
+radius.addEventListener('input', () => {
+  const v = parseInt(radius.value);
+  radiusValue.textContent = v >= 1000 ? (v/1000).toFixed(1).replace('.0','') + ' km' : v + ' m';
 });
+// 'change' dispara quando o usuario solta o slider — re-roda a busca com novo raio
+radius.addEventListener('change', () => {
+  if (currentCenter) runSearch(currentCenter.name, currentCenter.coords);
+});
+ratingFilter.addEventListener('input', () => { updateRatingFilterLabel(); if (currentResults.length) renderResults(); });
 onlyRated.addEventListener('change', () => { if (currentResults.length) renderResults(); });
 resetFilters.addEventListener('click', () => { resetFilterValues(); if (currentResults.length) renderResults(); });
 
@@ -1259,6 +1263,8 @@ async function runSearch(name, coords) {
   centerType = detectSearchType(name, coords);
   const subEl = document.getElementById('modeSubtitle');
   if (subEl) subEl.textContent = name;
+  // Esconde os chips de lugares populares quando ja' existe uma busca ativa
+  if (presetsBlock) presetsBlock.style.display = 'none';
   activeFilters = new Set(validTypes());
   updateFilterButtons();
   const centerLabel = centerType === 'hotel' ? "🏨" : centerType === 'cafe' ? "☕" : centerType === 'bakery' ? "🥐" : centerType === 'restaurant' ? "🍽️" : "📍";
@@ -1297,18 +1303,12 @@ function renderResults() {
   }
   // Apply filters
   const ratingTh = ratingThreshold();
-  const priceMax = parseInt(priceFilter.value);
   const onlyR = onlyRated.checked;
   let filtered = currentResults.filter(r => {
     if (centerType && r.type === centerType) return false; // exclui categoria do alvo
     if (!activeFilters.has(r.type)) return false; // categoria desligada na barra
     if (onlyR && !r.rating) return false;
     if (!passesRatingFilter(r, ratingTh)) return false;
-    if (r.type === 'hotel' && priceMax < 2000) {
-      if (!r.curated || r.curated.min == null) {
-        if (onlyR) return false;
-      } else if (r.curated.min > priceMax) return false;
-    }
     return true;
   });
   // Sort

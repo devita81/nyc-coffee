@@ -2,10 +2,10 @@
 // Estratégia: cache-first para app shell, network-first para APIs,
 // stale-while-revalidate para tiles do mapa (offline parcial).
 
-const CACHE_VERSION = "nyc-coffee-v13";
-const APP_SHELL = "nyc-coffee-shell-v13";
-const RUNTIME = "nyc-coffee-runtime-v13";
-const TILES = "nyc-coffee-tiles-v13";
+const CACHE_VERSION = "nyc-coffee-v14";
+const APP_SHELL = "nyc-coffee-shell-v14";
+const RUNTIME = "nyc-coffee-runtime-v14";
+const TILES = "nyc-coffee-tiles-v14";
 
 const SHELL_ASSETS = [
   "./",
