@@ -1,0 +1,1634 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+<title>NYC Coffee + Hotel Explorer</title>
+
+<!-- PWA -->
+<link rel="manifest" href="manifest.webmanifest" />
+<meta name="theme-color" content="#1b4332" />
+<meta name="description" content="Encontre cafeterias, bakeries e hoteis em Manhattan com filtros de avaliacao e preco." />
+
+<!-- Apple PWA -->
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="default" />
+<meta name="apple-mobile-web-app-title" content="NYC Coffee" />
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
+
+<!-- Favicons -->
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png" />
+<link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16.png" />
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png" />
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+<style>
+  :root {
+    /* Elegant dark forest green theme */
+    --green: #1b4332;
+    --green-dark: #081c15;
+    --green-mid: #2d6a4f;
+    --green-soft: #95d5b2;
+    --green-light: #d8f3dc;
+    --green-bg: #f5f9f6;
+    --gold-accent: #c9a35d;
+    /* Backward-compat aliases (so we don't have to swap every var(--purple) call) */
+    --purple: var(--green);
+    --purple-dark: var(--green-dark);
+    --purple-light: var(--green-light);
+    --purple-bg: var(--green-bg);
+    --ink: #1a2e1f;
+    --muted: #6b7570;
+    --border: #e1ebe4;
+    --card: #ffffff;
+    --cafe: #2d6a4f;
+    --bakery: #b8860b;
+    --restaurant: #9b2226;
+    --hotel: var(--green);
+    --topbar-h: 56px;
+    --bottomnav-h: 68px;
+    --shadow-card: 0 1px 3px rgba(8,28,21,0.06);
+    --shadow-elev: 0 4px 16px rgba(8,28,21,0.14);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  html, body {
+    height: 100%; width: 100%;
+    overflow: hidden;
+    position: fixed;
+    overscroll-behavior: none;
+    -webkit-text-size-adjust: 100%;
+    touch-action: manipulation;
+  }
+  body {
+    background: var(--purple-bg);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    color: var(--ink);
+    line-height: 1.4;
+    font-size: 14px;
+  }
+  /* prevent double-tap zoom in iOS */
+  button, .nav-item, .preset-chip, .quick-btn, .map-toggle-btn, .place-card, .ac-item, .tab {
+    touch-action: manipulation;
+  }
+  input, select, textarea { font-size: 16px !important; /* prevents iOS auto-zoom on focus */ }
+
+  /* ============ TOP BAR ============ */
+  .topbar {
+    position: fixed; top: 0; left: 0; right: 0;
+    height: calc(var(--topbar-h) + env(safe-area-inset-top));
+    background: var(--purple); color: white;
+    padding: env(safe-area-inset-top) 14px 0 14px;
+    display: flex; align-items: center; justify-content: space-between;
+    z-index: 100;
+    box-shadow: 0 2px 12px rgba(124,58,237,0.25);
+  }
+  .topbar-left { display: flex; align-items: center; gap: 10px; min-width: 0; flex: 1; }
+  .topbar-icon-wrap {
+    width: 36px; height: 36px; border-radius: 10px;
+    background: rgba(255,255,255,0.18);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; flex-shrink: 0;
+  }
+  .topbar-titles { display: flex; flex-direction: column; line-height: 1.2; min-width: 0; }
+  .topbar-title { font-size: 15px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .topbar-sub { font-size: 10px; opacity: 0.85; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .topbar-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+  .version-pill {
+    background: rgba(255,255,255,0.18); color: white;
+    font-size: 10px; padding: 3px 8px; border-radius: 10px;
+    font-weight: 700;
+  }
+  .topbar-btn {
+    width: 34px; height: 34px; border-radius: 50%;
+    background: rgba(255,255,255,0.18); border: none; cursor: pointer;
+    color: white; font-size: 15px;
+    display: none; align-items: center; justify-content: center;
+  }
+  .topbar-btn.show { display: flex; }
+  .topbar-btn:hover { background: rgba(255,255,255,0.28); }
+
+  /* ============ MAIN SCROLLABLE ============ */
+  .main-content {
+    position: absolute;
+    top: calc(var(--topbar-h) + env(safe-area-inset-top));
+    bottom: calc(var(--bottomnav-h) + env(safe-area-inset-bottom));
+    left: 0; right: 0;
+    overflow-y: auto; overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+    padding: 14px 14px 14px 14px;
+  }
+
+  /* ============ CARDS ============ */
+  .card {
+    background: var(--card); border-radius: 16px;
+    padding: 14px; margin-bottom: 12px;
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border);
+  }
+  .card-title {
+    font-size: 13px; font-weight: 700; color: var(--ink);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .card-icon {
+    width: 26px; height: 26px; border-radius: 8px;
+    background: var(--purple-light); color: var(--purple);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px;
+  }
+
+  /* Mode header */
+  .mode-header {
+    display: flex; align-items: center; gap: 12px;
+    margin-bottom: 14px; padding: 2px 4px;
+  }
+  .mode-header-icon {
+    width: 44px; height: 44px; border-radius: 12px;
+    background: var(--purple-light); color: var(--purple);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px; flex-shrink: 0;
+  }
+  .mode-header-text { min-width: 0; }
+  .mode-header-text h2 {
+    font-size: 17px; font-weight: 700; color: var(--ink);
+    line-height: 1.2;
+  }
+  .mode-subtitle { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+  /* Search */
+  .search-input-wrap {
+    display: flex; gap: 8px; position: relative;
+    background: var(--purple-bg); border-radius: 12px;
+    padding: 6px 10px 6px 14px;
+    align-items: center;
+  }
+  .search-icon { font-size: 14px; color: var(--muted); flex-shrink: 0; }
+  .search-input {
+    flex: 1; min-width: 0;
+    background: transparent; border: none; outline: none;
+    color: var(--ink);
+    padding: 8px 4px;
+  }
+  .search-input::placeholder { color: var(--muted); font-size: 13px; }
+  .search-btn {
+    background: var(--purple); color: white;
+    border: none; border-radius: 10px;
+    padding: 8px 14px; font-weight: 700; font-size: 13px;
+    cursor: pointer; flex-shrink: 0;
+  }
+  .search-btn:hover { background: var(--purple-dark); }
+  .search-btn:disabled { opacity: 0.6; }
+  .autocomplete {
+    position: absolute; top: calc(100% + 6px); left: 0; right: 0;
+    background: white; border: 1px solid var(--border); border-radius: 12px;
+    box-shadow: var(--shadow-elev);
+    z-index: 50; max-height: 280px; overflow-y: auto;
+    display: none;
+  }
+  .autocomplete.show { display: block; }
+  .ac-item {
+    padding: 10px 14px; cursor: pointer; border-bottom: 1px solid var(--border);
+    font-size: 13px;
+  }
+  .ac-item:last-child { border-bottom: none; }
+  .ac-item:hover { background: var(--purple-light); }
+  .ac-name { font-weight: 600; color: var(--ink); }
+  .ac-addr { color: var(--muted); font-size: 11px; margin-top: 2px; }
+  .ac-badge {
+    display: inline-block; font-size: 9px; padding: 1px 6px;
+    background: var(--purple); color: white; border-radius: 8px;
+    margin-left: 6px; font-weight: 700;
+  }
+
+  /* Quick actions in search card */
+  .quick-row { margin-top: 10px; display: flex; gap: 6px; flex-wrap: wrap; }
+  .quick-btn {
+    background: var(--purple-light); color: var(--purple);
+    border: none; border-radius: 16px;
+    padding: 8px 14px; font-size: 12px; font-weight: 700;
+    cursor: pointer; display: flex; align-items: center; gap: 5px;
+  }
+  .quick-btn:hover { background: var(--purple); color: white; }
+  .quick-btn.active { background: var(--cafe); color: white; }
+
+  /* Presets */
+  .preset-chips { margin-top: 10px; display: flex; gap: 6px; flex-wrap: wrap; }
+  .preset-chip {
+    padding: 6px 10px; background: white; border: 1px solid var(--border);
+    border-radius: 12px; font-size: 11px; cursor: pointer;
+    color: var(--muted); font-weight: 600;
+  }
+  .preset-chip:hover { background: var(--purple); color: white; border-color: var(--purple); }
+
+  /* Filters */
+  .filters-header {
+    display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;
+  }
+  .filter-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 6px 0; gap: 12px;
+  }
+  .filter-label { font-size: 12px; color: var(--muted); font-weight: 600; flex-shrink: 0; min-width: 80px; }
+  .filter-control { display: flex; align-items: center; gap: 8px; flex: 1; min-width: 0; }
+  .filter-control input[type=range] { flex: 1; accent-color: var(--purple); min-width: 0; }
+  .filter-value { font-size: 12px; font-weight: 700; color: var(--purple); min-width: 60px; text-align: right; flex-shrink: 0; }
+  .toggle-row {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 12px; color: var(--ink); padding: 8px 0 4px 0;
+    cursor: pointer;
+  }
+  .toggle-row input { accent-color: var(--purple); width: 16px; height: 16px; }
+  .reset-link {
+    background: none; border: none; color: var(--purple);
+    font-size: 12px; font-weight: 600; cursor: pointer; padding: 0;
+  }
+
+  /* Map card */
+  .map-card { padding: 0; overflow: hidden; }
+  .map-header-row {
+    padding: 12px 14px; display: flex; justify-content: space-between; align-items: center;
+  }
+  .map-toggle-btn {
+    background: var(--purple); color: white; border: none;
+    padding: 6px 12px; border-radius: 14px; font-size: 11px; font-weight: 700;
+    cursor: pointer; display: flex; align-items: center; gap: 4px;
+  }
+  .map-toggle-btn:hover { background: var(--purple-dark); }
+  .map-wrap { position: relative; }
+  #map { height: 160px; transition: height 0.3s ease; }
+  #map.expanded { height: 380px; }
+
+  /* Results */
+  .panel h2 {
+    font-size: 14px; font-weight: 700; color: var(--purple);
+    margin-bottom: 10px; padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+  }
+  .panel-info { font-size: 11px; color: var(--muted); margin-bottom: 10px; }
+  .empty-state { text-align: center; padding: 30px 16px; color: var(--muted); font-size: 12px; }
+  .empty-state .icon { font-size: 32px; margin-bottom: 8px; }
+  .loading { text-align: center; padding: 24px; color: var(--muted); font-size: 12px; }
+  .spinner { display: inline-block; width: 24px; height: 24px; border: 3px solid var(--border); border-top-color: var(--purple); border-radius: 50%; animation: spin 0.8s linear infinite; margin-bottom: 8px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .filter-tabs { display: flex; gap: 4px; margin-bottom: 10px; }
+  .tab {
+    flex: 1; padding: 7px 4px; background: var(--purple-bg);
+    border: none; border-radius: 10px;
+    font-size: 13px; cursor: pointer; color: var(--muted);
+    font-weight: 600; text-align: center;
+  }
+  .tab.active { background: var(--purple); color: white; }
+  .sort-row { display: flex; gap: 6px; align-items: center; margin-bottom: 8px; font-size: 11px; color: var(--muted); }
+  .sort-row select { padding: 5px 8px; border: 1px solid var(--border); border-radius: 6px; font-size: 11px; color: var(--ink); background: white; }
+
+  .place-card {
+    border: 1px solid var(--border); border-radius: 12px;
+    padding: 12px; margin-bottom: 8px;
+    background: white; cursor: pointer;
+    transition: all 0.15s;
+  }
+  .place-card:hover { border-color: var(--purple); transform: translateX(2px); }
+  .place-card.curated { border-left: 4px solid var(--purple); }
+  .place-name { font-weight: 700; font-size: 13px; color: var(--ink); }
+  .place-meta { font-size: 11px; color: var(--muted); margin-top: 3px; }
+  .badge-row { display: flex; gap: 5px; margin-top: 7px; flex-wrap: wrap; align-items: center; }
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 10px; font-weight: 700; }
+  .badge.cafe { background: rgba(45,106,79,0.15); color: #1b4332; }
+  .badge.bakery { background: rgba(184,134,11,0.15); color: #92400e; }
+  .badge.restaurant { background: rgba(155,34,38,0.15); color: #7f1d1d; }
+  .badge.hotel { background: var(--purple-light); color: var(--purple); }
+  .badge.distance { background: #f3f0f9; color: var(--muted); }
+  .badge.rating { background: rgba(245,158,11,0.18); color: #b45309; }
+  .badge.rating-high { background: rgba(16,185,129,0.18); color: #047857; }
+  .badge.rating-low { background: #e9e6f0; color: var(--muted); }
+  .badge.price { background: var(--purple-light); color: var(--purple); }
+  .badge.no-rating { background: #f3f0f9; color: var(--muted); font-style: italic; }
+  .badge.curated { background: var(--purple); color: white; }
+  .place-desc { font-size: 11px; color: var(--muted); margin-top: 4px; font-style: italic; }
+  .place-links { font-size: 11px; margin-top: 8px; display: flex; gap: 12px; flex-wrap: wrap; }
+  .place-links a { color: var(--purple); text-decoration: none; font-weight: 600; }
+  .place-links a:hover { text-decoration: underline; }
+
+  /* About card */
+  .about-card h3 { font-size: 14px; color: var(--purple); margin-bottom: 8px; }
+  .about-card p { font-size: 12px; color: var(--ink); margin-bottom: 8px; line-height: 1.5; }
+  .about-card strong { color: var(--purple); }
+  .about-features { list-style: none; padding: 0; margin: 8px 0; font-size: 12px; color: var(--ink); }
+  .about-features li { padding: 4px 0; padding-left: 20px; position: relative; }
+  .about-features li::before { content: "✓"; position: absolute; left: 0; color: var(--purple); font-weight: 700; }
+
+  /* Bottom nav */
+  .bottom-nav {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    height: calc(var(--bottomnav-h) + env(safe-area-inset-bottom));
+    padding-bottom: env(safe-area-inset-bottom);
+    background: white;
+    border-top: 1px solid var(--border);
+    display: flex;
+    z-index: 100;
+    box-shadow: 0 -2px 12px rgba(31,25,55,0.06);
+  }
+  .nav-item {
+    flex: 1; background: none; border: none; cursor: pointer;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 2px; color: var(--muted); font-weight: 600;
+    padding: 6px 4px;
+    transition: color 0.2s;
+  }
+  .nav-item.active { color: var(--purple); }
+  .nav-icon { font-size: 22px; line-height: 1; }
+  .nav-label { font-size: 10px; }
+
+  /* User location marker */
+  .user-marker-wrap { position: relative; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; }
+  .user-marker-wrap::before { content: ""; position: absolute; width: 36px; height: 36px; border-radius: 50%; background: rgba(59,130,246,0.25); animation: userpulse 2s infinite ease-out; }
+  .user-marker-wrap::after { content: ""; width: 18px; height: 18px; border-radius: 50%; background: #3b82f6; border: 3px solid white; box-shadow: 0 0 4px rgba(0,0,0,0.3); z-index: 2; }
+  @keyframes userpulse { 0% { transform: scale(0.4); opacity: 1; } 100% { transform: scale(1.6); opacity: 0; } }
+
+  /* Route info */
+  .route-info {
+    position: fixed; top: calc(var(--topbar-h) + env(safe-area-inset-top) + 10px);
+    left: 50%; transform: translateX(-50%);
+    background: white; padding: 10px 14px; border-radius: 16px;
+    box-shadow: var(--shadow-elev); border-left: 4px solid var(--purple);
+    font-size: 12px; font-weight: 600; z-index: 90;
+    display: flex; align-items: center; gap: 10px; max-width: calc(100vw - 32px);
+  }
+  .route-info button {
+    background: var(--purple); color: white; border: none;
+    padding: 4px 10px; border-radius: 10px; font-size: 11px; cursor: pointer;
+  }
+
+  /* Popup */
+  .popup-title { font-weight: 700; color: var(--purple); margin-bottom: 4px; font-size: 13px; }
+  .popup-row { font-size: 11px; margin: 2px 0; }
+  .popup-row a { color: var(--purple); }
+
+  /* Error / info boxes */
+  .error-box { background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; padding: 10px 14px; border-radius: 10px; font-size: 12px; margin-top: 8px; }
+  .info-box { background: #ecfdf5; border: 1px solid #bbf7d0; color: #166534; padding: 10px 14px; border-radius: 10px; font-size: 12px; margin-top: 8px; }
+
+  /* Update banner */
+  .update-banner {
+    position: fixed; top: calc(var(--topbar-h) + env(safe-area-inset-top) + 10px);
+    left: 50%; transform: translateX(-50%);
+    background: var(--purple); color: white; padding: 10px 16px;
+    border-radius: 20px; box-shadow: var(--shadow-elev); z-index: 200;
+    display: none; align-items: center; gap: 10px; font-size: 12px; font-weight: 600;
+  }
+  .update-banner.show { display: flex; }
+  .update-banner button {
+    background: white; color: var(--purple); border: none;
+    padding: 4px 10px; border-radius: 12px; font-size: 11px; cursor: pointer; font-weight: 700;
+  }
+
+  /* Desktop refinements */
+  @media (min-width: 768px) {
+    .main-content { padding: 18px max(18px, calc((100vw - 760px) / 2)); }
+    #map { height: 220px; }
+    #map.expanded { height: 480px; }
+    .topbar { padding-left: max(18px, calc((100vw - 760px) / 2)); padding-right: max(18px, calc((100vw - 760px) / 2)); }
+  }
+</style>
+</head>
+<body>
+<!-- Top bar -->
+<header class="topbar">
+  <div class="topbar-left">
+    <div class="topbar-icon-wrap">☕</div>
+    <div class="topbar-titles">
+      <div class="topbar-title">NYC Coffee</div>
+      <div class="topbar-sub">Hotéis · Cafés · Restaurantes</div>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <span class="version-pill" id="versionPill" title="Versão / Data do deploy">v9 · 24/mai</span>
+    <button id="refreshBtn" class="topbar-btn show" title="Limpar cache e atualizar app">🔄</button>
+    <button id="installBtn" class="topbar-btn" title="Instalar">⬇</button>
+  </div>
+</header>
+
+<!-- Update banner -->
+<div id="updateBanner" class="update-banner">
+  <span>Nova versão disponível</span>
+  <button id="updateBtn">Atualizar</button>
+</div>
+
+<!-- Route info (when active) -->
+<div id="routeInfo" class="route-info" style="display:none"></div>
+
+<!-- Main scrollable -->
+<main class="main-content" id="mainContent">
+
+  <!-- Mode header -->
+  <div class="mode-header" id="modeHeader">
+    <div class="mode-header-icon" id="modeHeaderIcon">📍</div>
+    <div class="mode-header-text">
+      <h2 id="modeTitle">Próximo de</h2>
+      <div class="mode-subtitle" id="modeSubtitle">The Bowery Hotel</div>
+    </div>
+  </div>
+
+  <!-- Search card -->
+  <div class="card" id="searchCard">
+    <div class="search-input-wrap">
+      <span class="search-icon">🔍</span>
+      <input type="text" id="searchInput" class="search-input" placeholder="Buscar hotel, café, bakery ou restaurante…" autocomplete="off"/>
+      <button id="searchBtn" class="search-btn">Buscar</button>
+      <div id="autocomplete" class="autocomplete"></div>
+    </div>
+    <div class="quick-row">
+      <button id="nearMeBtn" class="quick-btn">📍 Perto de mim</button>
+    </div>
+    <div class="preset-chips" id="presetsRow"></div>
+    <div id="errorBox"></div>
+  </div>
+
+  <!-- Filters card -->
+  <div class="card" id="filtersCard">
+    <div class="filters-header">
+      <span class="card-title"><span class="card-icon">⚙</span> Filtros</span>
+      <button id="resetFilters" class="reset-link">Limpar</button>
+    </div>
+    <div class="filter-row">
+      <label class="filter-label">Raio</label>
+      <div class="filter-control">
+        <input type="range" id="radius" min="200" max="2500" step="100" value="800"/>
+        <span class="filter-value" id="radiusValue">800 m</span>
+      </div>
+    </div>
+    <div class="filter-row" id="filterRatingGroup">
+      <label class="filter-label" id="ratingFilterLabel">Avaliação</label>
+      <div class="filter-control">
+        <input type="range" id="ratingFilter" min="0" max="50" step="1" value="0"/>
+        <span class="filter-value" id="ratingFilterValue">Todas</span>
+      </div>
+    </div>
+    <div class="filter-row" id="filterPriceGroup" style="display:none">
+      <label class="filter-label">Preço máx</label>
+      <div class="filter-control">
+        <input type="range" id="priceFilter" min="100" max="2000" step="50" value="2000"/>
+        <span class="filter-value" id="priceFilterValue">Qualquer</span>
+      </div>
+    </div>
+    <label class="toggle-row">
+      <input type="checkbox" id="onlyRated" checked />
+      <span>Só com avaliação</span>
+    </label>
+    <div id="filterStatus" style="font-size:11px;color:var(--muted);margin-top:6px;text-align:right;"></div>
+  </div>
+
+  <!-- Map card -->
+  <div class="card map-card" id="mapCard">
+    <div class="map-header-row">
+      <span class="card-title"><span class="card-icon">🗺️</span> Mapa</span>
+      <button id="mapToggle" class="map-toggle-btn">⛶ Expandir</button>
+    </div>
+    <div class="map-wrap">
+      <div id="map"></div>
+    </div>
+  </div>
+
+  <!-- Results card -->
+  <div class="card" id="resultsCard">
+    <div id="panel">
+      <div class="empty-state"><div class="icon">🔍</div><p>Digite ou escolha algo acima.</p></div>
+    </div>
+  </div>
+
+  <!-- About card (shown only on "Sobre" tab) -->
+  <div class="card about-card" id="aboutCard" style="display:none">
+    <h3>Sobre o app</h3>
+    <p><strong>NYC Coffee + Hotel Explorer</strong> ajuda você a encontrar cafeterias especializadas, bakeries artesanais, restaurantes e hotéis bem avaliados em Manhattan e Brooklyn.</p>
+    <ul class="about-features">
+      <li>65 hotéis + 95 cafés/bakeries/restaurantes curados</li>
+      <li>Avaliações reais Google + Booking (maio/2026)</li>
+      <li>Descoberta dinâmica via OpenStreetMap</li>
+      <li>📍 Perto de mim com rota a pé real (OSRM)</li>
+      <li>Funciona offline depois da primeira visita</li>
+      <li>Instalável como app nativo</li>
+    </ul>
+    <p style="font-size:11px;color:var(--muted);margin-top:14px;">
+      Versão <strong>v7</strong> · Deploy <strong>24/05/2026</strong><br>
+      Dados curados: maio/2026 · Mapas: OpenStreetMap<br>
+      Rotas a pé: OSRM (routing.openstreetmap.de)
+    </p>
+  </div>
+
+</main>
+
+<!-- Bottom nav -->
+<nav class="bottom-nav">
+  <button class="nav-item active" data-filter="all">
+    <div class="nav-icon">🌐</div>
+    <div class="nav-label">Todos</div>
+  </button>
+  <button class="nav-item" data-filter="hotel">
+    <div class="nav-icon">🏨</div>
+    <div class="nav-label">Hotéis</div>
+  </button>
+  <button class="nav-item" data-filter="cafe">
+    <div class="nav-icon">☕</div>
+    <div class="nav-label">Cafés</div>
+  </button>
+  <button class="nav-item" data-filter="bakery">
+    <div class="nav-icon">🥐</div>
+    <div class="nav-label">Bakery</div>
+  </button>
+  <button class="nav-item" data-filter="restaurant">
+    <div class="nav-icon">🍽️</div>
+    <div class="nav-label">Restaurantes</div>
+  </button>
+</nav>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script>
+// ===================== Curated databases =====================
+// Hotels: name, coords, addr, area, booking (rating 0-10), min, max, stars, desc
+const curatedHotels = [
+  // SoHo / Tribeca / NoLita
+  { name: "Crosby Street Hotel", coords: [40.7237, -73.9982], addr: "79 Crosby St", area: "SoHo", booking: 9.5, min: 1100, max: 1800, stars: 5, desc: "Firmdale - luxo de design." },
+  { name: "11 Howard", coords: [40.7203, -74.0001], addr: "11 Howard St", area: "SoHo", booking: 8.7, min: 199, max: 500, stars: 5, desc: "Design escandinavo, Le Coucou restaurant." },
+  { name: "ModernHaus SoHo", coords: [40.7237, -74.0049], addr: "27 Grand St", area: "SoHo", booking: 8.1, min: 254, max: 515, stars: 4, desc: "Boutique design, ex-James SoHo." },
+  { name: "SoHo Grand Hotel", coords: [40.7239, -74.0036], addr: "310 W Broadway", area: "SoHo", booking: 8.5, min: 300, max: 600, stars: 4, desc: "Lobby icônico." },
+  { name: "Sixty SoHo", coords: [40.7250, -74.0009], addr: "60 Thompson St", area: "SoHo", booking: 8.4, min: 300, max: 600, stars: 4, desc: "Boutique elegante." },
+  { name: "Arlo SoHo", coords: [40.7253, -74.0066], addr: "231 Hudson St", area: "Hudson Square", booking: 8.0, min: 184, max: 300, stars: 4, desc: "Quartos compactos, boa localização." },
+  { name: "Hotel Hugo", coords: [40.7268, -74.0083], addr: "525 Greenwich St", area: "Hudson Square", booking: 8.4, min: 179, max: 350, stars: 4, desc: "Rooftop, perto do West Village." },
+  { name: "NoMo SoHo", coords: [40.7195, -74.0008], addr: "9 Crosby St", area: "SoHo", booking: 8.5, min: 280, max: 500, stars: 4, desc: "Túnel floral icônico." },
+
+  // Tribeca / FiDi
+  { name: "Walker Hotel Tribeca", coords: [40.7193, -74.0021], addr: "77 Walker St", area: "Tribeca", booking: 8.6, min: 255, max: 320, stars: 4, desc: "Cozy boutique." },
+  { name: "The Greenwich Hotel", coords: [40.7196, -74.0103], addr: "377 Greenwich St", area: "Tribeca", booking: 9.4, min: 1000, max: 1800, stars: 5, desc: "De Niro's hotel, luxo discreto." },
+  { name: "The Roxy Hotel", coords: [40.7197, -74.0044], addr: "2 Av of the Americas", area: "Tribeca", booking: 8.3, min: 234, max: 500, stars: 4, desc: "Jazz club, cinema." },
+  { name: "The Frederick Hotel", coords: [40.7155, -74.0080], addr: "95 W Broadway", area: "Tribeca", booking: 8.0, min: 143, max: 300, stars: 4, desc: "Linens Frette." },
+  { name: "Four Seasons Downtown", coords: [40.7140, -74.0086], addr: "27 Barclay St", area: "FiDi", booking: 9.2, min: 800, max: 1500, stars: 5, desc: "Luxo downtown." },
+  { name: "The Beekman, A Thompson Hotel", coords: [40.7110, -74.0064], addr: "123 Nassau St", area: "FiDi", booking: 9.2, min: 400, max: 800, stars: 5, desc: "Átrio vitoriano deslumbrante." },
+  { name: "Conrad New York Downtown", coords: [40.7159, -74.0156], addr: "102 North End Ave", area: "Battery Park", booking: 8.5, min: 300, max: 500, stars: 5, desc: "Suítes amplas, vista do Hudson." },
+  { name: "Aloft Manhattan Downtown", coords: [40.7110, -74.0084], addr: "49 Ann St", area: "FiDi", booking: 8.7, min: 180, max: 320, stars: 3, desc: "Moderno, bom custo." },
+  { name: "citizenM New York World Trade Center", coords: [40.7148, -74.0146], addr: "189 West St", area: "FiDi", booking: 8.9, min: 230, max: 450, stars: 4, desc: "Smart hotel, rooftop." },
+
+  // Greenwich / West Village
+  { name: "The Marlton Hotel", coords: [40.7322, -73.9970], addr: "5 W 8th St", area: "Greenwich Village", booking: 8.5, min: 255, max: 320, stars: 4, desc: "Boutique histórico, café da manhã grátis." },
+  { name: "Walker Hotel Greenwich Village", coords: [40.7355, -73.9956], addr: "52 W 13th St", area: "Greenwich Village", booking: 8.2, min: 234, max: 940, stars: 4, desc: "Boutique no coração do Village." },
+  { name: "The Jane Hotel", coords: [40.7384, -74.0099], addr: "113 Jane St", area: "West Village", booking: 7.6, min: 99, max: 220, stars: 3, desc: "Cabines estilo barco, charme histórico." },
+  { name: "Gansevoort Meatpacking", coords: [40.7406, -74.0072], addr: "18 9th Ave", area: "Meatpacking", booking: 9.0, min: 350, max: 650, stars: 5, desc: "Rooftop com vista do Hudson." },
+  { name: "The Standard High Line", coords: [40.7406, -74.0086], addr: "848 Washington St", area: "Meatpacking", booking: 8.5, min: 400, max: 700, stars: 4, desc: "Vista High Line + Hudson." },
+
+  // East Village / LES
+  { name: "The Ludlow Hotel", coords: [40.7211, -73.9889], addr: "180 Ludlow St", area: "Lower East Side", booking: 8.9, min: 436, max: 955, stars: 4, desc: "Boutique LES, bohemian." },
+  { name: "Hotel Indigo Lower East Side", coords: [40.7155, -73.9914], addr: "171 Ludlow St", area: "Lower East Side", booking: 8.2, min: 220, max: 450, stars: 4, desc: "IHG; vistas amplas." },
+  { name: "PUBLIC Hotel", coords: [40.7236, -73.9892], addr: "215 Chrystie St", area: "Lower East Side", booking: 8.7, min: 200, max: 400, stars: 4, desc: "Ian Schrager; rooftop 360." },
+  { name: "Sister City", coords: [40.7233, -73.9923], addr: "225 Bowery", area: "Bowery", booking: 8.6, min: 200, max: 350, stars: 4, desc: "Minimalismo finlandês." },
+  { name: "citizenM New York Bowery", coords: [40.7239, -73.9930], addr: "189 Bowery", area: "Bowery", booking: 8.4, min: 213, max: 500, stars: 4, desc: "Smart hotel, rooftop bar." },
+  { name: "The Bowery Hotel", coords: [40.7260, -73.9923], addr: "335 Bowery", area: "East Village", booking: 9.0, min: 500, max: 1200, stars: 5, desc: "Lobby histórico, atrai celebs." },
+  { name: "The Standard - East Village", coords: [40.7287, -73.9907], addr: "25 Cooper Sq", area: "East Village", booking: 8.5, min: 300, max: 500, stars: 4, desc: "Vista 360 do rooftop." },
+  { name: "Moxy NYC Lower East Side", coords: [40.7176, -73.9959], addr: "145 Bowery", area: "Lower East Side", booking: 8.3, min: 169, max: 400, stars: 4, desc: "Smart design, rooftop bar." },
+  { name: "Hotel 50 Bowery", coords: [40.7159, -73.9961], addr: "50 Bowery", area: "Chinatown", booking: 8.4, min: 180, max: 350, stars: 4, desc: "JdV by Hyatt, rooftop The Crown." },
+  { name: "Wyndham Garden Chinatown", coords: [40.7155, -73.9964], addr: "93 Bowery", area: "Chinatown", booking: 7.6, min: 130, max: 250, stars: 3, desc: "Budget, café da manhã + rooftop." },
+
+  // NoMad / Flatiron / Chelsea
+  { name: "Motto by Hilton NYC Chelsea", coords: [40.7461, -73.9931], addr: "144 W 28th St", area: "Chelsea/NoMad", booking: 8.7, min: 123, max: 280, stars: 4, desc: "Boutique compacto, ótima localização." },
+  { name: "Moxy NYC Chelsea", coords: [40.7466, -73.9889], addr: "105 W 28th St", area: "Chelsea/NoMad", booking: 8.4, min: 200, max: 400, stars: 4, desc: "Rooftop Magic Hour." },
+  { name: "Ace Hotel New York", coords: [40.7459, -73.9886], addr: "20 W 29th St", area: "NoMad", booking: 8.5, min: 102, max: 400, stars: 4, desc: "Hip lobby, lar do Stumptown Coffee." },
+  { name: "MADE Hotel", coords: [40.7457, -73.9886], addr: "44 W 29th St", area: "NoMad", booking: 8.5, min: 192, max: 400, stars: 4, desc: "Chic bohemian, vistas amplas." },
+  { name: "Hotel Seville NoMad (ex-James)", coords: [40.7459, -73.9852], addr: "22 E 29th St", area: "NoMad", booking: 8.0, min: 266, max: 500, stars: 4, desc: "Unbound Collection by Hyatt." },
+  { name: "Hotel AKA NoMad", coords: [40.7466, -73.9849], addr: "131 Madison Ave", area: "NoMad", booking: 8.4, min: 254, max: 616, stars: 4, desc: "Boutique elegante." },
+  { name: "Freehand New York", coords: [40.7393, -73.9844], addr: "23 Lexington Ave", area: "Flatiron", booking: 8.0, min: 198, max: 404, stars: 3, desc: "Design Roman & Williams." },
+  { name: "The Maritime Hotel", coords: [40.7427, -74.0061], addr: "363 W 16th St", area: "Chelsea", booking: 8.5, min: 250, max: 400, stars: 4, desc: "Quartos com janelas redondas." },
+
+  // Midtown
+  { name: "The Kixby", coords: [40.7503, -73.9853], addr: "45 W 35th St", area: "Garment District", booking: 8.9, min: 190, max: 280, stars: 4, desc: "Boutique com rooftop bar." },
+  { name: "The Refinery Hotel", coords: [40.7530, -73.9852], addr: "63 W 38th St", area: "Garment District", booking: 8.7, min: 220, max: 400, stars: 4, desc: "Rooftop com vista do Empire State." },
+  { name: "Library Hotel", coords: [40.7530, -73.9784], addr: "299 Madison Ave", area: "Midtown East", booking: 9.4, min: 300, max: 500, stars: 4, desc: "Tema literário, breakfast/vinho/cheese incluso." },
+  { name: "Pod 51", coords: [40.7547, -73.9700], addr: "230 E 51st St", area: "Midtown East", booking: 8.0, min: 150, max: 280, stars: 3, desc: "Quartos pequenos eficientes." },
+  { name: "Andaz 5th Avenue", coords: [40.7530, -73.9810], addr: "485 5th Ave", area: "Midtown", booking: 8.8, min: 350, max: 600, stars: 5, desc: "Hyatt boutique, próximo NY Public Library." },
+  { name: "The Knickerbocker", coords: [40.7559, -73.9863], addr: "6 Times Square", area: "Times Square", booking: 8.4, min: 250, max: 500, stars: 5, desc: "Hotel histórico de 1906." },
+  { name: "Hotel Edison", coords: [40.7595, -73.9854], addr: "228 W 47th St", area: "Times Square", booking: 8.0, min: 200, max: 350, stars: 3, desc: "Art Deco clássico." },
+  { name: "Marriott Marquis Times Sq", coords: [40.7589, -73.9849], addr: "1535 Broadway", area: "Times Square", booking: 8.6, min: 280, max: 500, stars: 4, desc: "Restaurante giratório no topo." },
+  { name: "Hyatt Centric Times Square", coords: [40.7572, -73.9831], addr: "135 W 45th St", area: "Times Square", booking: 8.4, min: 230, max: 400, stars: 4, desc: "Rooftop bar com vista." },
+  { name: "Hotel Riu Plaza Manhattan Times Square", coords: [40.7585, -73.9846], addr: "145 W 47th St", area: "Times Square", booking: 8.8, min: 250, max: 450, stars: 4, desc: "Casais rate 9.7; ótimo custo-benefício." },
+  { name: "citizenM Times Square", coords: [40.7613, -73.9836], addr: "218 W 50th St", area: "Times Square", booking: 9.0, min: 280, max: 450, stars: 4, desc: "Rooftop com vista skyline." },
+  { name: "Yotel Times Square", coords: [40.7621, -73.9952], addr: "570 10th Ave", area: "Hell's Kitchen", booking: 8.4, min: 200, max: 380, stars: 4, desc: "Quartos compactos high-tech." },
+  { name: "Lotte New York Palace", coords: [40.7587, -73.9744], addr: "455 Madison Ave", area: "Midtown", booking: 8.9, min: 350, max: 700, stars: 5, desc: "Pátio histórico, suítes Towers." },
+  { name: "The St. Regis NY", coords: [40.7613, -73.9744], addr: "2 E 55th St", area: "Midtown", booking: 9.3, min: 1200, max: 2000, stars: 5, desc: "Butler service, King Cole Bar." },
+  { name: "The Plaza", coords: [40.7644, -73.9744], addr: "768 5th Ave", area: "Midtown", booking: 8.8, min: 800, max: 2000, stars: 5, desc: "Icônico, Central Park." },
+  { name: "Park Hyatt New York", coords: [40.7654, -73.9809], addr: "153 W 57th St", area: "Midtown", booking: 9.4, min: 900, max: 2000, stars: 5, desc: "Vista Central Park, piscina interna." },
+  { name: "The Whitby Hotel", coords: [40.7621, -73.9759], addr: "18 W 56th St", area: "Midtown", booking: 9.6, min: 1200, max: 2000, stars: 5, desc: "Firmdale - design colorido." },
+  { name: "Ritz-Carlton NY Central Park", coords: [40.7660, -73.9764], addr: "50 Central Park S", area: "Midtown", booking: 9.3, min: 1300, max: 2500, stars: 5, desc: "Vista Central Park, butler." },
+  { name: "Mandarin Oriental NY", coords: [40.7682, -73.9831], addr: "80 Columbus Cir", area: "Columbus Circle", booking: 9.2, min: 900, max: 1800, stars: 5, desc: "Suítes com vista do parque." },
+  { name: "Park Lane New York", coords: [40.7656, -73.9755], addr: "36 Central Park S", area: "Midtown", booking: 9.0, min: 400, max: 700, stars: 5, desc: "Vista Central Park, recém-renovado." },
+
+  // Hudson Yards
+  { name: "Pendry Manhattan West", coords: [40.7536, -73.9982], addr: "438 W 33rd St", area: "Hudson Yards", booking: 9.2, min: 500, max: 800, stars: 5, desc: "Novo luxo Hudson Yards." },
+  { name: "Equinox Hotel Hudson Yards", coords: [40.7536, -74.0014], addr: "33 Hudson Yards", area: "Hudson Yards", booking: 9.2, min: 700, max: 1200, stars: 5, desc: "Wellness, piscina suspensa." },
+
+  // Upper East / West
+  { name: "The Carlyle", coords: [40.7748, -73.9645], addr: "35 E 76th St", area: "Upper East Side", booking: 9.0, min: 1000, max: 1800, stars: 5, desc: "Lendário, Bemelmans Bar." },
+  { name: "The Mark", coords: [40.7766, -73.9637], addr: "25 E 77th St", area: "Upper East Side", booking: 9.5, min: 1500, max: 2500, stars: 5, desc: "Chic moderno, Jean-Georges restaurant." },
+  { name: "The Pierre, A Taj Hotel", coords: [40.7651, -73.9728], addr: "2 E 61st St", area: "Upper East Side", booking: 9.0, min: 800, max: 1500, stars: 5, desc: "Elegância clássica, Central Park." },
+  { name: "The Surrey, Corinthia", coords: [40.7755, -73.9645], addr: "20 E 76th St", area: "Upper East Side", booking: 9.5, min: 1000, max: 1800, stars: 5, desc: "Recém-reaberto, Corinthia Hotels." },
+  { name: "Hotel Belleclaire", coords: [40.7821, -73.9799], addr: "250 W 77th St", area: "Upper West Side", booking: 8.2, min: 180, max: 300, stars: 3, desc: "Boutique histórico, perto do MNH." },
+  { name: "The Empire Hotel", coords: [40.7708, -73.9817], addr: "44 W 63rd St", area: "Upper West Side", booking: 8.5, min: 220, max: 400, stars: 4, desc: "Rooftop com vista Lincoln Center." },
+
+  // Brooklyn (próximos a Manhattan)
+  { name: "The Hoxton, Williamsburg", coords: [40.7224, -73.9568], addr: "97 Wythe Ave, Brooklyn", area: "Williamsburg", booking: 8.9, min: 250, max: 450, stars: 4, desc: "Hip boutique do Brooklyn." },
+  { name: "The William Vale", coords: [40.7218, -73.9568], addr: "111 N 12th St, Brooklyn", area: "Williamsburg", booking: 9.1, min: 350, max: 600, stars: 5, desc: "Piscina + vista skyline." },
+  { name: "Wythe Hotel", coords: [40.7218, -73.9577], addr: "80 Wythe Ave, Brooklyn", area: "Williamsburg", booking: 9.0, min: 300, max: 500, stars: 4, desc: "Industrial-chic, rooftop." }
+];
+
+// Cafes/Bakeries (Google ratings)
+const curatedPlaces = [
+  // ===== Specialty Coffee =====
+  { name: "Devoción NoMad", aliases: ["devocion"], type: "cafe", rating: 4.6, coords: [40.7384, -73.9892], addr: "25 E 20th St", desc: "Café colombiano fresquíssimo." },
+  { name: "Devoción Flatiron", aliases: ["devocion"], type: "cafe", rating: 4.5, coords: [40.7445, -73.9888], addr: "1134 Broadway", desc: "Espaço amplo com plantas." },
+  { name: "La Cabra SoHo", aliases: ["la cabra"], type: "cafe", rating: 4.6, coords: [40.7239, -73.9966], addr: "284 Lafayette St", desc: "Light roasts nórdicos premium." },
+  { name: "La Cabra East Village", aliases: ["la cabra"], type: "cafe", rating: 4.6, coords: [40.7280, -73.9876], addr: "152 2nd Ave", desc: "Outpost original, clean wood." },
+  { name: "Stumptown Coffee (Ace Hotel)", aliases: ["stumptown"], type: "cafe", rating: 4.4, coords: [40.7459, -73.9886], addr: "18 W 29th St", desc: "Pioneiro third-wave; cold brew icônico." },
+  { name: "Joe Coffee West Village", aliases: ["joe coffee"], type: "cafe", rating: 4.5, coords: [40.7338, -74.0023], addr: "141 Waverly Pl", desc: "Origem do Joe; torrefação." },
+  { name: "Joe Coffee Chelsea", aliases: ["joe coffee"], type: "cafe", rating: 4.4, coords: [40.7411, -74.0007], addr: "187 7th Ave", desc: "Joe Pro Shop." },
+  { name: "Cafe Integral", aliases: ["cafe integral", "café integral"], type: "cafe", rating: 4.4, coords: [40.7218, -73.9961], addr: "149 Elizabeth St", desc: "Grãos nicaraguenses exclusivos." },
+  { name: "Arcane Coffee", aliases: ["arcane"], type: "cafe", rating: 4.7, coords: [40.7308, -74.0034], addr: "9 Cornelia St", desc: "#12 World's Best Coffee Shops 2024." },
+  { name: "Partners Coffee West Village", aliases: ["partners coffee"], type: "cafe", rating: 4.4, coords: [40.7349, -74.0044], addr: "44 Charles St", desc: "Roastery NY; flat whites." },
+  { name: "Abraço Espresso", aliases: ["abraço", "abraco"], type: "cafe", rating: 4.6, coords: [40.7271, -73.9856], addr: "81 E 7th St", desc: "Olive oil cake + espresso." },
+  { name: "Black Fox Coffee", aliases: ["black fox"], type: "cafe", rating: 4.5, coords: [40.7065, -74.0079], addr: "70 Pine St", desc: "Sourcing global, FiDi." },
+  { name: "Watchhouse SoHo", aliases: ["watchhouse"], type: "cafe", rating: 4.4, coords: [40.7218, -73.9978], addr: "213 Lafayette St", desc: "Cadeia londrina premium." },
+  { name: "Blue Bottle Coffee NoHo", aliases: ["blue bottle"], type: "cafe", rating: 4.4, coords: [40.7280, -73.9942], addr: "32 W 8th St", desc: "Pioneiro third-wave Oakland." },
+  { name: "Birch Coffee NoMad", aliases: ["birch coffee"], type: "cafe", rating: 4.4, coords: [40.7430, -73.9844], addr: "5 E 27th St", desc: "Cadeia local nova-iorquina." },
+  { name: "Bluestone Lane West Village", aliases: ["bluestone lane"], type: "cafe", rating: 4.3, coords: [40.7350, -74.0050], addr: "55 Greenwich Ave", desc: "Australian flat whites." },
+  { name: "Bluestone Lane NoMad", aliases: ["bluestone lane"], type: "cafe", rating: 4.3, coords: [40.7445, -73.9886], addr: "1085 Broadway", desc: "Aussie coffee culture." },
+  { name: "Culture Espresso", aliases: ["culture espresso"], type: "cafe", rating: 4.5, coords: [40.7546, -73.9851], addr: "72 W 38th St", desc: "Cookies de chocolate famosos." },
+  { name: "Saltwater Coffee", aliases: ["saltwater"], type: "cafe", rating: 4.5, coords: [40.7295, -73.9826], addr: "345 E 12th St", desc: "East Village charm." },
+  { name: "Third Rail Coffee", aliases: ["third rail"], type: "cafe", rating: 4.4, coords: [40.7305, -73.9999], addr: "240 Sullivan St", desc: "Pequeno café no West Village." },
+  { name: "Felix Roasting Co", aliases: ["felix roasting"], type: "cafe", rating: 4.6, coords: [40.7437, -73.9846], addr: "450 Park Ave South", desc: "Espresso bar luxuoso." },
+  { name: "787 Coffee", aliases: ["787"], type: "cafe", rating: 4.5, coords: [40.7155, -73.9970], addr: "25 Bowery", desc: "Roastery Porto Rico, várias unidades." },
+  { name: "Variety Coffee Roasters", aliases: ["variety"], type: "cafe", rating: 4.5, coords: [40.7382, -73.9853], addr: "257 Park Ave South", desc: "Roaster local Brooklyn-NY." },
+  { name: "Toby's Estate Coffee Flatiron", aliases: ["toby's estate"], type: "cafe", rating: 4.4, coords: [40.7405, -73.9914], addr: "160 5th Ave", desc: "Australian café com torra própria." },
+  { name: "Café Grumpy Chelsea", aliases: ["cafe grumpy", "grumpy"], type: "cafe", rating: 4.4, coords: [40.7434, -73.9990], addr: "200 W 20th St", desc: "Local favorito, refeições." },
+  { name: "For Five Coffee Roasters", aliases: ["for five"], type: "cafe", rating: 4.5, coords: [40.7530, -73.9760], addr: "200 Park Ave (MetLife)", desc: "Lounge feel + torrefação própria." },
+  { name: "Gasoline Alley Coffee", aliases: ["gasoline alley"], type: "cafe", rating: 4.5, coords: [40.7277, -73.9929], addr: "325 Lafayette St", desc: "Café australiano hipster." },
+  { name: "Round K", aliases: ["round k"], type: "cafe", rating: 4.4, coords: [40.7191, -73.9920], addr: "99 Allen St", desc: "Café coreano elegante." },
+  { name: "Café Reggio", aliases: ["reggio"], type: "cafe", rating: 4.5, coords: [40.7308, -74.0006], addr: "119 MacDougal St", desc: "Histórico desde 1927." },
+  { name: "Caffè Vita", aliases: ["caffe vita", "vita"], type: "cafe", rating: 4.6, coords: [40.7191, -73.9879], addr: "124 Ludlow St", desc: "Seattle roaster, LES." },
+  { name: "Mudspot", aliases: ["mudspot", "mud"], type: "cafe", rating: 4.4, coords: [40.7286, -73.9866], addr: "307 E 9th St", desc: "East Village clássico." },
+  { name: "Two Hands Café", aliases: ["two hands"], type: "cafe", rating: 4.5, coords: [40.7195, -74.0050], addr: "251 Church St", desc: "Brunch australiano premiado." },
+  { name: "The Smile", aliases: ["the smile"], type: "cafe", rating: 4.5, coords: [40.7263, -73.9930], addr: "26 Bond St", desc: "Hipster underground, NoHo." },
+  { name: "Think Coffee Bleecker", aliases: ["think coffee"], type: "cafe", rating: 4.3, coords: [40.7314, -73.9989], addr: "248 Mercer St", desc: "Local NYC, ético." },
+  { name: "Sant Ambroeus West Village", aliases: ["sant ambroeus"], type: "cafe", rating: 4.5, coords: [40.7338, -74.0040], addr: "259 W 4th St", desc: "Milanese café/restaurante." },
+  { name: "Sey Coffee", aliases: ["sey"], type: "cafe", rating: 4.7, coords: [40.7081, -73.9341], addr: "18 Grattan St (Bushwick)", desc: "Top NYC, sourcing exclusivo." },
+  { name: "Devoción Williamsburg", aliases: ["devocion"], type: "cafe", rating: 4.6, coords: [40.7193, -73.9591], addr: "69 Grand St (Brooklyn)", desc: "Roastery flagship." },
+
+  // ===== Bakeries =====
+  { name: "Maman NoMad", aliases: ["maman"], type: "bakery", rating: 4.5, coords: [40.7440, -73.9908], addr: "22 W 25th St", desc: "Cookies Oprah-aprovados." },
+  { name: "Maman SoHo", aliases: ["maman"], type: "bakery", rating: 4.4, coords: [40.7194, -73.9989], addr: "239 Centre St", desc: "Charme provençal." },
+  { name: "Maman West Village", aliases: ["maman"], type: "bakery", rating: 4.5, coords: [40.7274, -74.0067], addr: "375 Hudson St", desc: "Filial Hudson Square." },
+  { name: "Dominique Ansel Bakery", aliases: ["dominique ansel"], type: "bakery", rating: 4.5, coords: [40.7245, -74.0030], addr: "189 Spring St", desc: "Casa do Cronut." },
+  { name: "Balthazar Bakery", aliases: ["balthazar"], type: "bakery", rating: 4.5, coords: [40.7232, -73.9988], addr: "80 Spring St", desc: "Padaria francesa desde 1997." },
+  { name: "Lafayette Bakery", aliases: ["lafayette grand", "lafayette bakery"], type: "bakery", rating: 4.6, coords: [40.7290, -73.9923], addr: "380 Lafayette St", desc: "Croissant Suprême famoso." },
+  { name: "L'Appartement 4F", aliases: ["appartement", "4f"], type: "bakery", rating: 4.7, coords: [40.7345, -74.0037], addr: "183 W 10th St", desc: "Croissants quentes na janela." },
+  { name: "Levain Bakery NoHo", aliases: ["levain"], type: "bakery", rating: 4.6, coords: [40.7325, -73.9938], addr: "27 E 8th St", desc: "Cookies gigantes lendários." },
+  { name: "Levain Bakery UWS", aliases: ["levain"], type: "bakery", rating: 4.7, coords: [40.7790, -73.9818], addr: "167 W 74th St", desc: "Original UWS - menos fila." },
+  { name: "Breads Bakery Union Sq", aliases: ["breads bakery"], type: "bakery", rating: 4.5, coords: [40.7368, -73.9913], addr: "18 E 16th St", desc: "Babka de chocolate top NY." },
+  { name: "Bourke Street Bakery", aliases: ["bourke street"], type: "bakery", rating: 4.5, coords: [40.7448, -73.9858], addr: "15 E 28th St", desc: "Australian; sausage rolls." },
+  { name: "She Wolf Bakery", aliases: ["she wolf"], type: "bakery", rating: 4.6, coords: [40.7245, -73.9920], addr: "150 Allen St", desc: "Sourdough excelente." },
+  { name: "Magnolia Bakery West Village", aliases: ["magnolia"], type: "bakery", rating: 4.3, coords: [40.7355, -74.0058], addr: "401 Bleecker St", desc: "Banana pudding clássico." },
+  { name: "Ess-a-Bagel Midtown", aliases: ["ess-a-bagel"], type: "bakery", rating: 4.5, coords: [40.7567, -73.9678], addr: "831 3rd Ave", desc: "Bagels icônicos." },
+  { name: "Russ & Daughters Cafe", aliases: ["russ daughters"], type: "bakery", rating: 4.5, coords: [40.7211, -73.9890], addr: "127 Orchard St", desc: "Bagels com lox lendários." },
+  { name: "Russ & Daughters Flagship", aliases: ["russ daughters"], type: "bakery", rating: 4.6, coords: [40.7222, -73.9886], addr: "179 E Houston St", desc: "Appetizing shop desde 1914." },
+  { name: "Sadelle's", aliases: ["sadelle"], type: "bakery", rating: 4.4, coords: [40.7250, -74.0011], addr: "463 W Broadway", desc: "Bagel boards instagramáveis." },
+  { name: "Black Seed Bagels NoLita", aliases: ["black seed"], type: "bakery", rating: 4.4, coords: [40.7223, -73.9942], addr: "170 Elizabeth St", desc: "Bagels Montreal-NY hybrid." },
+  { name: "Murray's Bagels", aliases: ["murray"], type: "bakery", rating: 4.4, coords: [40.7359, -73.9981], addr: "500 6th Ave", desc: "Hand-rolled NYC bagels." },
+  { name: "Tompkins Square Bagels", aliases: ["tompkins"], type: "bakery", rating: 4.6, coords: [40.7269, -73.9826], addr: "165 Avenue A", desc: "Massive creative cream cheeses." },
+  { name: "Eric Kayser UES", aliases: ["eric kayser", "kayser"], type: "bakery", rating: 4.4, coords: [40.7741, -73.9594], addr: "1294 3rd Ave", desc: "Padaria francesa premium." },
+  { name: "Daily Provisions Union Sq", aliases: ["daily provisions"], type: "bakery", rating: 4.6, coords: [40.7385, -73.9893], addr: "103 E 19th St", desc: "Crullers Danny Meyer." },
+  { name: "Doughnut Plant Chelsea", aliases: ["doughnut plant"], type: "bakery", rating: 4.5, coords: [40.7449, -74.0001], addr: "220 W 23rd St", desc: "Donuts artesanais, sabores únicos." },
+  { name: "Once Upon a Tart", aliases: ["upon a tart"], type: "bakery", rating: 4.4, coords: [40.7268, -74.0007], addr: "135 Sullivan St", desc: "SoHo classic." },
+  { name: "Bibble & Sip", aliases: ["bibble sip"], type: "bakery", rating: 4.6, coords: [40.7625, -73.9856], addr: "253 W 51st St", desc: "Cream puffs asiáticos." },
+  { name: "Schmackary's", aliases: ["schmackary"], type: "bakery", rating: 4.6, coords: [40.7591, -73.9881], addr: "362 W 45th St", desc: "Cookies Broadway, sabores rotativos." },
+  { name: "Veniero's Pastry", aliases: ["veniero"], type: "bakery", rating: 4.6, coords: [40.7307, -73.9846], addr: "342 E 11th St", desc: "Italian desde 1894 - cannoli." },
+  { name: "Ferrara Bakery", aliases: ["ferrara"], type: "bakery", rating: 4.4, coords: [40.7188, -73.9974], addr: "195 Grand St", desc: "Little Italy desde 1892." },
+  { name: "Ladurée SoHo", aliases: ["laduree"], type: "bakery", rating: 4.5, coords: [40.7252, -74.0014], addr: "398 W Broadway", desc: "Macarons franceses icônicos." },
+  { name: "Bouchon Bakery Rockefeller", aliases: ["bouchon"], type: "bakery", rating: 4.4, coords: [40.7587, -73.9787], addr: "1 Rockefeller Plaza", desc: "Thomas Keller; TKO cookies." },
+  // ===== Restaurants =====
+  { name: "Carbone", aliases: ["carbone"], type: "restaurant", rating: 4.6, coords: [40.7287, -74.0011], addr: "181 Thompson St", desc: "Italian-American clássico, reserva difícil." },
+  { name: "Don Angie", aliases: ["don angie"], type: "restaurant", rating: 4.7, coords: [40.7344, -74.0048], addr: "103 Greenwich Ave", desc: "Italian moderno, pinwheel lasagna icônica." },
+  { name: "Via Carota", aliases: ["via carota"], type: "restaurant", rating: 4.6, coords: [40.7335, -74.0048], addr: "51 Grove St", desc: "Italian rustico, sem reserva, vale a fila." },
+  { name: "Rubirosa", aliases: ["rubirosa"], type: "restaurant", rating: 4.5, coords: [40.7221, -73.9956], addr: "235 Mulberry St", desc: "Pizza Staten Island style, vodka pasta." },
+  { name: "Lilia", aliases: ["lilia"], type: "restaurant", rating: 4.7, coords: [40.7178, -73.9531], addr: "567 Union Ave (Williamsburg)", desc: "Italian pasta perfeita, Missy Robbins." },
+  { name: "Misi", aliases: ["misi"], type: "restaurant", rating: 4.6, coords: [40.7136, -73.9657], addr: "329 Kent Ave (Williamsburg)", desc: "Pasta minimalista, Missy Robbins #2." },
+  { name: "Lupa", aliases: ["lupa"], type: "restaurant", rating: 4.5, coords: [40.7287, -74.0014], addr: "170 Thompson St", desc: "Italian trattoria, Mario Batali legacy." },
+  { name: "Estela", aliases: ["estela"], type: "restaurant", rating: 4.5, coords: [40.7252, -73.9942], addr: "47 E Houston St", desc: "Mediterranean small plates, Bond Street Bar." },
+  { name: "Raoul's", aliases: ["raoul"], type: "restaurant", rating: 4.5, coords: [40.7251, -74.0007], addr: "180 Prince St", desc: "French bistro desde 1975, burger lendário." },
+  { name: "L'Industrie Pizzeria", aliases: ["industrie"], type: "restaurant", rating: 4.7, coords: [40.7152, -73.9598], addr: "254 S 2nd St (Williamsburg)", desc: "Slice pizza, burrata + figo." },
+  { name: "Joe's Pizza", aliases: ["joe's pizza", "joes pizza"], type: "restaurant", rating: 4.5, coords: [40.7302, -74.0023], addr: "7 Carmine St", desc: "Pizza fatia clássica desde 1975." },
+  { name: "Lombardi's Pizza", aliases: ["lombardi"], type: "restaurant", rating: 4.5, coords: [40.7216, -73.9956], addr: "32 Spring St", desc: "Primeira pizzaria dos EUA (1905)." },
+  { name: "Prince Street Pizza", aliases: ["prince street"], type: "restaurant", rating: 4.5, coords: [40.7228, -73.9942], addr: "27 Prince St", desc: "Pepperoni square slice famosa." },
+  { name: "Sushi Nakazawa", aliases: ["nakazawa"], type: "restaurant", rating: 4.7, coords: [40.7311, -74.0050], addr: "23 Commerce St", desc: "Omakase do aprendiz do Jiro Dreams." },
+  { name: "Ippudo NY", aliases: ["ippudo"], type: "restaurant", rating: 4.5, coords: [40.7292, -73.9889], addr: "65 4th Ave", desc: "Ramen tonkotsu japonês top." },
+  { name: "Momofuku Noodle Bar", aliases: ["momofuku"], type: "restaurant", rating: 4.4, coords: [40.7297, -73.9852], addr: "171 1st Ave", desc: "Pioneiro David Chang, pork bun." },
+  { name: "Le Bernardin", aliases: ["le bernardin", "bernardin"], type: "restaurant", rating: 4.7, coords: [40.7614, -73.9821], addr: "155 W 51st St", desc: "Frutos do mar, 3 estrelas Michelin." },
+  { name: "Daniel", aliases: ["daniel"], type: "restaurant", rating: 4.7, coords: [40.7676, -73.9696], addr: "60 E 65th St", desc: "Daniel Boulud, alta cozinha francesa." },
+  { name: "Buvette", aliases: ["buvette"], type: "restaurant", rating: 4.6, coords: [40.7330, -74.0048], addr: "42 Grove St", desc: "Bistrô francês intimista, brunch top." },
+  { name: "Le Coucou", aliases: ["coucou"], type: "restaurant", rating: 4.6, coords: [40.7193, -74.0008], addr: "138 Lafayette St (11 Howard)", desc: "Francês refinado, restaurante do hotel." },
+  { name: "Frenchette", aliases: ["frenchette"], type: "restaurant", rating: 4.6, coords: [40.7193, -74.0058], addr: "241 W Broadway", desc: "Bistrô francês moderno, ex-Balthazar chefs." },
+  { name: "Atomix", aliases: ["atomix"], type: "restaurant", rating: 4.8, coords: [40.7445, -73.9831], addr: "104 E 30th St", desc: "Kaiseki coreano, 2 estrelas Michelin." },
+  { name: "Cote Korean Steakhouse", aliases: ["cote"], type: "restaurant", rating: 4.7, coords: [40.7415, -73.9905], addr: "16 W 22nd St", desc: "Korean BBQ + steakhouse, 1 estrela Michelin." },
+  { name: "Atoboy", aliases: ["atoboy"], type: "restaurant", rating: 4.6, coords: [40.7445, -73.9842], addr: "43 E 28th St", desc: "Korean moderno, tasting menu." },
+  { name: "Gramercy Tavern", aliases: ["gramercy tavern"], type: "restaurant", rating: 4.6, coords: [40.7383, -73.9888], addr: "42 E 20th St", desc: "Danny Meyer, New American clássico." },
+  { name: "Eleven Madison Park", aliases: ["eleven madison", "emp"], type: "restaurant", rating: 4.6, coords: [40.7414, -73.9876], addr: "11 Madison Ave", desc: "Plant-based tasting, 3 estrelas Michelin." },
+  { name: "Blue Hill", aliases: ["blue hill"], type: "restaurant", rating: 4.6, coords: [40.7316, -73.9990], addr: "75 Washington Pl", desc: "Farm-to-table de Dan Barber." },
+  { name: "ABC Kitchen", aliases: ["abc kitchen"], type: "restaurant", rating: 4.5, coords: [40.7376, -73.9893], addr: "35 E 18th St", desc: "Jean-Georges sustentável, Union Sq." },
+  { name: "Crown Shy", aliases: ["crown shy"], type: "restaurant", rating: 4.7, coords: [40.7065, -74.0079], addr: "70 Pine St", desc: "New American FiDi, 1 estrela Michelin." },
+  { name: "Katz's Delicatessen", aliases: ["katz"], type: "restaurant", rating: 4.6, coords: [40.7223, -73.9874], addr: "205 E Houston St", desc: "Pastrami sanduíche lendário desde 1888." },
+  { name: "Shukette", aliases: ["shukette"], type: "restaurant", rating: 4.5, coords: [40.7434, -74.0017], addr: "230 9th Ave", desc: "Israeli/Mediterranean, Ayesha Nurdjaja." },
+  { name: "Miznon NYC", aliases: ["miznon"], type: "restaurant", rating: 4.5, coords: [40.7421, -74.0061], addr: "435 W 15th St (Chelsea Mkt)", desc: "Pita israelense, Eyal Shani." },
+  { name: "Cosme", aliases: ["cosme"], type: "restaurant", rating: 4.5, coords: [40.7394, -73.9886], addr: "35 E 21st St", desc: "Mexican alto nível, Enrique Olvera." },
+  { name: "Tacombi NoLita", aliases: ["tacombi"], type: "restaurant", rating: 4.4, coords: [40.7237, -73.9947], addr: "267 Elizabeth St", desc: "Tacos casuais em ambiente kombi." },
+  { name: "Peter Luger Steak House", aliases: ["peter luger", "luger"], type: "restaurant", rating: 4.5, coords: [40.7102, -73.9624], addr: "178 Broadway (Williamsburg)", desc: "Steakhouse alemã desde 1887, só dinheiro." },
+  { name: "Keens Steakhouse", aliases: ["keens"], type: "restaurant", rating: 4.5, coords: [40.7503, -73.9871], addr: "72 W 36th St", desc: "Mutton chop + pipes coleção." },
+  { name: "Russ & Daughters Cafe", aliases: ["russ daughters cafe"], type: "restaurant", rating: 4.5, coords: [40.7211, -73.9890], addr: "127 Orchard St", desc: "Bagel + lox + smoked fish sit-down." },
+  { name: "The Smith", aliases: ["the smith"], type: "restaurant", rating: 4.4, coords: [40.7287, -73.9938], addr: "55 3rd Ave", desc: "American bistro animado, brunch popular." },
+  { name: "Westville Chelsea", aliases: ["westville"], type: "restaurant", rating: 4.4, coords: [40.7466, -74.0029], addr: "246 W 18th St", desc: "Vegetariano farm-to-table casual." },
+  { name: "Loring Place", aliases: ["loring place"], type: "restaurant", rating: 4.5, coords: [40.7322, -73.9978], addr: "21 W 8th St", desc: "Dan Kluger, vegetal-focado, pizza top." }
+];
+
+const presets = {
+  hotel: [
+    { id: "bowery", name: "The Bowery Hotel", coords: [40.7260, -73.9923] },
+    { id: "kixby", name: "The Kixby", coords: [40.7503, -73.9853] },
+    { id: "walker", name: "Walker Tribeca", coords: [40.7193, -74.0021] },
+    { id: "marlton", name: "The Marlton", coords: [40.7322, -73.9970] },
+    { id: "library", name: "Library Hotel", coords: [40.7530, -73.9784] },
+    { id: "ace", name: "Ace Hotel NoMad", coords: [40.7459, -73.9886] },
+    { id: "crosby", name: "Crosby Street", coords: [40.7237, -73.9982] },
+    { id: "ludlow", name: "The Ludlow", coords: [40.7211, -73.9889] },
+    { id: "plaza", name: "The Plaza", coords: [40.7644, -73.9744] }
+  ],
+  place: [
+    { id: "devocion", name: "Devoción NoMad", coords: [40.7384, -73.9892] },
+    { id: "lacabra-soho", name: "La Cabra SoHo", coords: [40.7239, -73.9966] },
+    { id: "lacabra-ev", name: "La Cabra East Village", coords: [40.7280, -73.9876] },
+    { id: "arcane", name: "Arcane Coffee", coords: [40.7308, -74.0034] },
+    { id: "stumptown", name: "Stumptown (Ace)", coords: [40.7459, -73.9886] },
+    { id: "dominique", name: "Dominique Ansel", coords: [40.7245, -74.0030] },
+    { id: "maman-nomad", name: "Maman NoMad", coords: [40.7440, -73.9908] },
+    { id: "balthazar", name: "Balthazar", coords: [40.7232, -73.9988] },
+    { id: "lafayette", name: "Lafayette Bakery", coords: [40.7290, -73.9923] },
+    { id: "appartement", name: "L'Appartement 4F", coords: [40.7345, -74.0037] }
+  ]
+};
+
+// ===================== Helpers =====================
+function dist(a, b) {
+  const R = 6371;
+  const toRad = x => x * Math.PI / 180;
+  const dLat = toRad(b[0]-a[0]);
+  const dLng = toRad(b[1]-a[1]);
+  const lat1 = toRad(a[0]);
+  const lat2 = toRad(b[0]);
+  const h = Math.sin(dLat/2)**2 + Math.cos(lat1)*Math.cos(lat2)*Math.sin(dLng/2)**2;
+  return 2 * R * Math.asin(Math.sqrt(h));
+}
+function fmtKm(km) { return km*1000 < 1000 ? Math.round(km*1000) + " m" : km.toFixed(2) + " km"; }
+function walkMin(km) { return Math.max(1, Math.round((km / 4.0) * 60)); }
+function normalize(s) { return (s || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9 ]/g, " ").replace(/\s+/g, ' ').trim(); }
+
+function findCuratedPlace(osmPlace) {
+  const nn = normalize(osmPlace.name);
+  if (!nn || nn === "cafe sem nome" || nn === "bakery sem nome") return null;
+  for (const c of curatedPlaces) {
+    if (c.type !== osmPlace.type) continue;
+    const d = dist(c.coords, osmPlace.coords) * 1000;
+    if (d > 100) continue;
+    const cn = normalize(c.name);
+    if (cn.includes(nn) || nn.includes(cn.split(' ')[0])) return c;
+    for (const al of (c.aliases || [])) {
+      if (nn.includes(normalize(al))) return c;
+    }
+  }
+  return null;
+}
+
+function findCuratedHotel(osmHotel) {
+  const nn = normalize(osmHotel.name);
+  if (!nn) return null;
+  for (const h of curatedHotels) {
+    const d = dist(h.coords, osmHotel.coords) * 1000;
+    if (d > 150) continue;
+    const hn = normalize(h.name);
+    if (hn.includes(nn) || nn.includes(hn.split(' ')[0])) return h;
+  }
+  return null;
+}
+
+// ===================== Map =====================
+const map = L.map('map').setView([40.732, -73.997], 14);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  attribution: '&copy; OpenStreetMap', maxZoom: 19
+}).addTo(map);
+
+let activeMarkers = [];
+let radiusCircle = null;
+let activeCenterMarker = null;
+
+function clearMarkers() {
+  activeMarkers.forEach(m => map.removeLayer(m));
+  activeMarkers = [];
+  if (radiusCircle) { map.removeLayer(radiusCircle); radiusCircle = null; }
+  if (activeCenterMarker) { map.removeLayer(activeCenterMarker); activeCenterMarker = null; }
+}
+function colorFor(type) { if (type === "hotel") return "#6b4423"; if (type === "cafe") return "#2e7d5b"; if (type === "restaurant") return "#9c2a3a"; return "#b85c38"; }
+function makeIcon(type, label, isCurated, isCenter) {
+  const color = colorFor(type);
+  const border = isCurated ? "#d4a24a" : "white";
+  const size = isCenter ? 32 : (isCurated ? 26 : 22);
+  const fontSize = isCenter ? 14 : (isCurated ? 11 : 10);
+  const html = `<div style="background:${color};color:white;width:${size}px;height:${size}px;border-radius:50%;border:3px solid ${border};box-shadow:0 0 0 2px rgba(0,0,0,0.25);display:flex;align-items:center;justify-content:center;font-size:${fontSize}px;font-weight:700;">${label}</div>`;
+  return L.divIcon({ html, className: "", iconSize: [size,size], iconAnchor: [size/2, size/2] });
+}
+
+// ===================== State =====================
+let mode = "hotel";
+let currentResults = [];
+let currentFilter = "all";
+let currentSort = "rating";
+let currentCenter = null;
+
+const searchInput = document.getElementById('searchInput');
+const autocomplete = document.getElementById('autocomplete');
+const searchBtn = document.getElementById('searchBtn');
+const errorBox = document.getElementById('errorBox');
+const panel = document.getElementById('panel');
+const radius = document.getElementById('radius');
+const radiusValue = document.getElementById('radiusValue');
+const presetsRow = document.getElementById('presetsRow');
+const ratingFilter = document.getElementById('ratingFilter');
+const ratingFilterValue = document.getElementById('ratingFilterValue');
+const priceFilter = document.getElementById('priceFilter');
+const priceFilterValue = document.getElementById('priceFilterValue');
+const onlyRated = document.getElementById('onlyRated');
+const resetFilters = document.getElementById('resetFilters');
+const filterStatus = document.getElementById('filterStatus');
+const filterPriceGroup = document.getElementById('filterPriceGroup');
+
+// Multi-select handler: bottom nav filtra categorias
+function updateFilterButtons() {
+  document.querySelectorAll('.nav-item').forEach(btn => {
+    const f = btn.dataset.filter;
+    btn.classList.remove('active', 'disabled');
+    btn.disabled = false;
+    if (f !== 'all' && f === centerType) {
+      // Categoria do alvo da busca: indisponivel
+      btn.classList.add('disabled');
+      btn.disabled = true;
+    } else if (f === 'all') {
+      if (activeFilters.size === 0) btn.classList.add('active');
+    } else {
+      if (activeFilters.has(f)) btn.classList.add('active');
+    }
+  });
+  // Price slider so' visivel quando filtrando Hoteis
+  const showPrice = activeFilters.has('hotel') || (activeFilters.size === 0 && centerType !== 'hotel');
+  if (filterPriceGroup) filterPriceGroup.style.display = showPrice ? '' : 'none';
+  updateRatingFilterLabel();
+}
+document.querySelectorAll('.nav-item').forEach(btn => {
+  btn.addEventListener('click', () => {
+    if (btn.disabled) return;
+    const f = btn.dataset.filter;
+    if (f === 'all') {
+      activeFilters.clear();
+    } else {
+      if (activeFilters.has(f)) activeFilters.delete(f);
+      else activeFilters.add(f);
+    }
+    updateFilterButtons();
+    if (currentResults.length) renderResults();
+  });
+});
+
+function updateModeUI() {
+  searchInput.placeholder = "Buscar hotel, café, bakery ou restaurante…";
+  updateRatingFilterLabel();
+  renderPresets();
+}
+
+function resetFilterValues() {
+  ratingFilter.value = 0;
+  updateRatingFilterLabel();
+  priceFilter.value = 2000;
+  priceFilterValue.textContent = "Qualquer";
+  onlyRated.checked = true;
+}
+
+function effectiveFilterContext() {
+  if (activeFilters.size === 1) return Array.from(activeFilters)[0];
+  return 'all';
+}
+function updateRatingFilterLabel() {
+  const v = parseInt(ratingFilter.value);
+  const ctx = effectiveFilterContext();
+  const lbl = document.getElementById('ratingFilterLabel');
+  if (v === 0) {
+    ratingFilterValue.textContent = "Todas";
+  } else if (ctx === 'hotel') {
+    const rating = (7.0 + (v / 50) * 2.5).toFixed(1);
+    ratingFilterValue.textContent = "≥ " + rating + " / 10";
+  } else if (ctx === 'all') {
+    const pct = Math.round(50 + (v / 50) * 50);
+    ratingFilterValue.textContent = "≥ " + pct + "%";
+  } else {
+    const rating = (3.5 + (v / 50) * 1.5).toFixed(1);
+    ratingFilterValue.textContent = "≥ " + rating + " / 5";
+  }
+  if (lbl) {
+    if (ctx === 'hotel') lbl.textContent = "Booking /10";
+    else if (ctx === 'all') lbl.textContent = "Avaliação";
+    else lbl.textContent = "Google /5";
+  }
+}
+function ratingThreshold() {
+  const v = parseInt(ratingFilter.value);
+  if (v === 0) return { type: 'none' };
+  const ctx = effectiveFilterContext();
+  if (ctx === 'hotel') return { type: 'booking', value: parseFloat((7.0 + (v / 50) * 2.5).toFixed(1)) };
+  if (ctx === 'all') return { type: 'normalized', value: 0.5 + (v / 50) * 0.5 };
+  return { type: 'google', value: parseFloat((3.5 + (v / 50) * 1.5).toFixed(1)) };
+}
+function passesRatingFilter(item, th) {
+  if (th.type === 'none') return true;
+  if (!item.rating) return false;
+  if (th.type === 'normalized') {
+    const max = item.type === 'hotel' ? 10 : 5;
+    return (item.rating / max) >= th.value;
+  }
+  return item.rating >= th.value;
+}
+
+function renderPresets() {
+  // Combina presets de hotel + place (modelo unificado)
+  const list = [...(presets.hotel || []), ...(presets.place || [])];
+  presetsRow.innerHTML = list.map(p => `<span class="preset-chip" data-coords="${p.coords[0]},${p.coords[1]}" data-name="${p.name}">${p.name}</span>`).join('');
+  presetsRow.querySelectorAll('.preset-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      const [lat, lng] = chip.dataset.coords.split(',').map(parseFloat);
+      searchInput.value = chip.dataset.name;
+      runSearch(chip.dataset.name, [lat, lng]);
+    });
+  });
+}
+
+radius.addEventListener('input', () => { radiusValue.textContent = radius.value + ' m'; });
+ratingFilter.addEventListener('input', () => { updateRatingFilterLabel(); if (currentResults.length) renderResults(); });
+priceFilter.addEventListener('input', () => {
+  const v = parseInt(priceFilter.value);
+  priceFilterValue.textContent = v >= 2000 ? "Qualquer" : "≤ $" + v;
+  if (currentResults.length) renderResults();
+});
+onlyRated.addEventListener('change', () => { if (currentResults.length) renderResults(); });
+resetFilters.addEventListener('click', () => { resetFilterValues(); if (currentResults.length) renderResults(); });
+
+// ===================== Autocomplete =====================
+let acTimeout = null;
+searchInput.addEventListener('input', () => {
+  clearTimeout(acTimeout);
+  const q = searchInput.value.trim();
+  if (q.length < 2) { autocomplete.classList.remove('show'); autocomplete.innerHTML = ''; return; }
+  acTimeout = setTimeout(() => fetchSuggestions(q), 300);
+});
+document.addEventListener('click', (e) => { if (!e.target.closest('.search-input-wrap')) autocomplete.classList.remove('show'); });
+
+async function fetchSuggestions(q) {
+  const nq = normalize(q);
+  const hMatches = curatedHotels.filter(h => normalize(h.name).includes(nq) || normalize(h.area).includes(nq)).slice(0, 4);
+  const pMatches = curatedPlaces.filter(p => normalize(p.name).includes(nq) || (p.aliases||[]).some(a => normalize(a).includes(nq))).slice(0, 4);
+  const internal = [...hMatches, ...pMatches];
+  let html = '';
+  if (internal.length) {
+    html = internal.map(it => {
+      const isHotel = it.booking !== undefined;
+      const meta = isHotel ? `Booking ${it.booking}/10 · $${it.min}-${it.max}/noite` : `⭐ ${it.rating}/5`;
+      return `<div class="ac-item" data-lat="${it.coords[0]}" data-lng="${it.coords[1]}" data-name="${it.name}">
+        <div class="ac-name">${it.name} <span class="ac-badge">CURADO</span></div>
+        <div class="ac-addr">${it.addr || ''} · ${meta}</div></div>`;
+    }).join('');
+  }
+  autocomplete.innerHTML = html + `<div class="ac-item" style="text-align:center;color:#aaa;font-style:italic;">Buscando mais…</div>`;
+  autocomplete.classList.add('show');
+  bindAcItems();
+  try {
+    const viewbox = "-74.05,40.88,-73.90,40.68";
+    const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q + " New York")}&limit=6&viewbox=${viewbox}&bounded=1&addressdetails=1`;
+    const res = await fetch(url, { headers: { 'Accept-Language': 'pt-BR,en' } });
+    const data = await res.json();
+    const filtered = data;
+    const useData = filtered.length ? filtered : data;
+    let external = useData.map(item => {
+      const name = item.name || (item.display_name || '').split(',')[0];
+      const addr = (item.display_name || '').split(',').slice(1, 3).join(',').trim();
+      return `<div class="ac-item" data-lat="${item.lat}" data-lng="${item.lon}" data-name="${(name || '').replace(/"/g, '&quot;')}">
+        <div class="ac-name">${name}</div><div class="ac-addr">${addr}</div></div>`;
+    }).join('');
+    if (!external && !internal.length) {
+      autocomplete.innerHTML = `<div class="ac-item"><div class="ac-name">Nenhum resultado encontrado</div></div>`;
+    } else {
+      autocomplete.innerHTML = (internal.length ? html : '') + external;
+    }
+    bindAcItems();
+  } catch (err) {
+    if (!internal.length) autocomplete.innerHTML = `<div class="ac-item"><div class="ac-name">Erro ao buscar. Tente novamente.</div></div>`;
+    else { autocomplete.innerHTML = html; bindAcItems(); }
+  }
+}
+function bindAcItems() {
+  autocomplete.querySelectorAll('.ac-item').forEach(el => {
+    if (!el.dataset.lat) return;
+    el.addEventListener('click', () => {
+      const lat = parseFloat(el.dataset.lat);
+      const lng = parseFloat(el.dataset.lng);
+      const name = el.dataset.name;
+      searchInput.value = name;
+      autocomplete.classList.remove('show');
+      runSearch(name, [lat, lng]);
+    });
+  });
+}
+
+searchBtn.addEventListener('click', () => doSearchFromInput());
+searchInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); doSearchFromInput(); } });
+
+async function doSearchFromInput() {
+  const q = searchInput.value.trim();
+  if (!q) return;
+  errorBox.innerHTML = '';
+  const nq = normalize(q);
+  const internal = curatedHotels.find(h => normalize(h.name).includes(nq) || nq.includes(normalize(h.name)))
+    || curatedPlaces.find(p => normalize(p.name).includes(nq) || (p.aliases||[]).some(a => normalize(a) === nq));
+  if (internal) { runSearch(internal.name, internal.coords); return; }
+  searchBtn.disabled = true; searchBtn.textContent = "Buscando…";
+  try {
+    const viewbox = "-74.05,40.88,-73.90,40.68";
+    const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q + " New York")}&limit=5&viewbox=${viewbox}&bounded=1`;
+    const res = await fetch(url, { headers: { 'Accept-Language': 'pt-BR,en' } });
+    const data = await res.json();
+    const pick = data[0];
+    if (!pick) { errorBox.innerHTML = `<div class="error-box">Não encontrei "${q}". Tente outra grafia ou inclua o bairro.</div>`; return; }
+    runSearch(pick.name || q, [parseFloat(pick.lat), parseFloat(pick.lon)]);
+  } catch (err) {
+    errorBox.innerHTML = `<div class="error-box">Erro de rede: ${err.message}.</div>`;
+  } finally { searchBtn.disabled = false; searchBtn.textContent = "Buscar"; }
+}
+
+// ===================== Overpass =====================
+const OVERPASS_ENDPOINTS = [
+  "https://overpass-api.de/api/interpreter",
+  "https://overpass.kumi.systems/api/interpreter",
+  "https://lz4.overpass-api.de/api/interpreter",
+  "https://z.overpass-api.de/api/interpreter"
+];
+async function overpassQuery(query, timeoutMs = 6000) {
+  let lastErr = null;
+  for (const ep of OVERPASS_ENDPOINTS) {
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), timeoutMs);
+    try {
+      const res = await fetch(ep, {
+        method: "POST",
+        body: "data=" + encodeURIComponent(query),
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        signal: ctrl.signal
+      });
+      clearTimeout(t);
+      if (!res.ok) { lastErr = new Error(`HTTP ${res.status} from ${ep}`); continue; }
+      return await res.json();
+    } catch (err) {
+      clearTimeout(t);
+      lastErr = err;
+      continue;
+    }
+  }
+  throw lastErr || new Error("Todos endpoints Overpass falharam");
+}
+async function fetchNearbyCafesBakeriesOSM(coords, r) {
+  const [lat, lng] = coords;
+  const q = `[out:json][timeout:25];(node["amenity"="cafe"](around:${r},${lat},${lng});way["amenity"="cafe"](around:${r},${lat},${lng});node["shop"="bakery"](around:${r},${lat},${lng});way["shop"="bakery"](around:${r},${lat},${lng});node["shop"="pastry"](around:${r},${lat},${lng});node["amenity"="restaurant"](around:${r},${lat},${lng});way["amenity"="restaurant"](around:${r},${lat},${lng}););out center tags;`;
+  const data = await overpassQuery(q);
+  return data.elements.map(el => {
+    const c = el.type === "node" ? [el.lat, el.lon] : [el.center.lat, el.center.lon];
+    const tags = el.tags || {};
+    const isBakery = tags.shop === "bakery" || tags.shop === "pastry";
+    const isRestaurant = tags.amenity === "restaurant";
+    let type, defaultName;
+    if (isRestaurant) { type = "restaurant"; defaultName = "Restaurante sem nome"; }
+    else if (isBakery) { type = "bakery"; defaultName = "Bakery sem nome"; }
+    else { type = "cafe"; defaultName = "Café sem nome"; }
+    return { id: el.id, name: tags.name || defaultName, type, coords: c, cuisine: tags.cuisine || "", website: tags.website || tags["contact:website"] || "", address: [tags["addr:housenumber"], tags["addr:street"]].filter(Boolean).join(' ') };
+  });
+}
+async function fetchNearbyHotelsOSM(coords, r) {
+  const [lat, lng] = coords;
+  const q = `[out:json][timeout:25];(node["tourism"="hotel"](around:${r},${lat},${lng});way["tourism"="hotel"](around:${r},${lat},${lng});node["tourism"="guest_house"](around:${r},${lat},${lng}););out center tags;`;
+  const data = await overpassQuery(q);
+  return data.elements.map(el => {
+    const c = el.type === "node" ? [el.lat, el.lon] : [el.center.lat, el.center.lon];
+    const tags = el.tags || {};
+    return { id: el.id, name: tags.name || "Hotel sem nome", type: "hotel", coords: c, address: [tags["addr:housenumber"], tags["addr:street"]].filter(Boolean).join(' ') };
+  });
+}
+
+// ===================== Run Search =====================
+async function enrichWithOSM(coords, r) {
+  // Faz UMA query Overpass combinada (hoteis + POIs) com timeout total agressivo
+  const [lat, lng] = coords;
+  const q = `[out:json][timeout:8];(node["amenity"~"^(cafe|restaurant)$"](around:${r},${lat},${lng});way["amenity"~"^(cafe|restaurant)$"](around:${r},${lat},${lng});node["shop"~"^(bakery|pastry)$"](around:${r},${lat},${lng});way["shop"~"^(bakery|pastry)$"](around:${r},${lat},${lng});node["tourism"="hotel"](around:${r},${lat},${lng});way["tourism"="hotel"](around:${r},${lat},${lng}););out center tags;`;
+  let elements = [];
+  try {
+    const data = await overpassQuery(q, 8000);
+    elements = data.elements || [];
+  } catch (e) {
+    console.warn('OSM enrich falhou:', e.message);
+    return; // Curados ja' estao na tela, nao tem problema
+  }
+  // Processar elementos: identificar tipo e mesclar com curated
+  const seen = new Set();
+  currentResults.forEach(m => seen.add(normalize(m.name)));
+  let added = 0;
+  elements.forEach(el => {
+    const c = el.type === "node" ? [el.lat, el.lon] : [el.center.lat, el.center.lon];
+    const tags = el.tags || {};
+    let type;
+    if (tags.tourism === "hotel") type = "hotel";
+    else if (tags.amenity === "restaurant") type = "restaurant";
+    else if (tags.shop === "bakery" || tags.shop === "pastry") type = "bakery";
+    else type = "cafe";
+    const defaultName = type === "hotel" ? "Hotel sem nome" : type === "restaurant" ? "Restaurante sem nome" : type === "bakery" ? "Bakery sem nome" : "Café sem nome";
+    const item = {
+      id: el.id,
+      name: tags.name || defaultName,
+      type,
+      coords: c,
+      address: [tags["addr:housenumber"], tags["addr:street"]].filter(Boolean).join(' '),
+      website: tags.website || tags["contact:website"] || ""
+    };
+    if (seen.has(normalize(item.name))) return;
+    // Try match curated
+    const cur = type === "hotel" ? findCuratedHotel(item) : findCuratedPlace(item);
+    if (cur && seen.has(normalize(cur.name))) return;
+    if (cur) {
+      currentResults.push({ ...cur, type: type === "hotel" ? "hotel" : cur.type, distance: dist(coords, cur.coords), curated: cur, rating: type === "hotel" ? cur.booking : cur.rating, coords: cur.coords });
+      seen.add(normalize(cur.name));
+    } else {
+      currentResults.push({ ...item, distance: dist(coords, item.coords), curated: null, rating: null, desc: "" });
+      seen.add(normalize(item.name));
+    }
+    added++;
+  });
+  if (added > 0) {
+    renderResults(); // re-render com OSM adicionados
+  }
+}
+
+function detectSearchType(name, coords) {
+  const nn = normalize(name);
+  if (!nn || nn === 'minha localizacao' || nn.includes('localizacao')) return null;
+  const hByCoord = curatedHotels.find(h => dist(coords, h.coords) * 1000 < 30);
+  if (hByCoord) return 'hotel';
+  const pByCoord = curatedPlaces.find(p => dist(coords, p.coords) * 1000 < 30);
+  if (pByCoord) return pByCoord.type;
+  const hByName = curatedHotels.find(h => normalize(h.name) === nn || normalize(h.name).includes(nn));
+  if (hByName) return 'hotel';
+  const pByName = curatedPlaces.find(p => normalize(p.name) === nn || (p.aliases||[]).some(a => normalize(a) === nn));
+  if (pByName) return pByName.type;
+  return null;
+}
+
+async function runSearch(name, coords) {
+  clearMarkers();
+  clearRoute();
+  // If map is collapsed, still keep collapsed (user choice) but invalidate size
+  setTimeout(() => map.invalidateSize(), 50);
+  // Loading minimo - sera substituido em <100ms pelos curados
+  errorBox.innerHTML = '';
+  currentCenter = { name, coords };
+  centerType = detectSearchType(name, coords);
+  const subEl = document.getElementById('modeSubtitle');
+  if (subEl) subEl.textContent = name;
+  activeFilters.clear();
+  updateFilterButtons();
+  const centerLabel = centerType === 'hotel' ? "🏨" : centerType === 'cafe' ? "☕" : centerType === 'bakery' ? "🥐" : centerType === 'restaurant' ? "🍽️" : "📍";
+  const centerColorType = centerType || 'hotel';
+  activeCenterMarker = L.marker(coords, { icon: makeIcon(centerColorType, centerLabel, false, true) }).addTo(map);
+  activeCenterMarker.bindPopup(`<div class="popup-title">${name}</div><div class="popup-row">Local selecionado</div>`).openPopup();
+  radiusCircle = L.circle(coords, { radius: parseInt(radius.value), color: "#6b4423", weight: 1, fillColor: "#d4a24a", fillOpacity: 0.08 }).addTo(map);
+  map.flyTo(coords, 15, { duration: 0.7 });
+
+  try {
+    const r = parseInt(radius.value);
+
+    // === FASE 1: render INSTANTANEO com dados curados (sem network) ===
+    const curHotels = curatedHotels
+      .filter(h => dist(coords, h.coords) * 1000 <= r)
+      .map(h => ({ ...h, type: "hotel", distance: dist(coords, h.coords), curated: h, rating: h.booking }));
+    const curPOIs = curatedPlaces
+      .filter(p => dist(coords, p.coords) * 1000 <= r)
+      .map(p => ({ ...p, distance: dist(coords, p.coords), curated: p, rating: p.rating }));
+    currentResults = [...curHotels, ...curPOIs];
+    renderResults(); // mostra ja' tudo dos curados
+
+    // === FASE 2: enriquece com OSM em paralelo (nao bloqueia) ===
+    enrichWithOSM(coords, r);
+  } catch (err) {
+    console.error(err);
+    panel.innerHTML = `<div class="error-box">Erro: ${err.message}.</div>`;
+  }
+}
+
+function renderResults() {
+  if (!currentResults.length) {
+    panel.innerHTML = `<div class="empty-state"><div class="icon">😕</div><p>Nada encontrado nesse raio. Aumente o raio.</p></div>`;
+    filterStatus.textContent = '';
+    return;
+  }
+  // Apply filters
+  const ratingTh = ratingThreshold();
+  const priceMax = parseInt(priceFilter.value);
+  const onlyR = onlyRated.checked;
+  let filtered = currentResults.filter(r => {
+    if (centerType && r.type === centerType) return false; // exclui categoria do alvo
+    if (activeFilters.size > 0 && !activeFilters.has(r.type)) return false; // multi-select
+    if (onlyR && !r.rating) return false;
+    if (!passesRatingFilter(r, ratingTh)) return false;
+    if (r.type === 'hotel' && priceMax < 2000) {
+      if (!r.curated || r.curated.min == null) {
+        if (onlyR) return false;
+      } else if (r.curated.min > priceMax) return false;
+    }
+    return true;
+  });
+  // Sort
+  filtered.sort((a, b) => {
+    if (currentSort === "rating") {
+      if ((b.rating || 0) !== (a.rating || 0)) return (b.rating || 0) - (a.rating || 0);
+      return a.distance - b.distance;
+    }
+    if (currentSort === "price") {
+      const ap = a.curated && a.curated.min != null ? a.curated.min : 9999;
+      const bp = b.curated && b.curated.min != null ? b.curated.min : 9999;
+      return ap - bp;
+    }
+    return a.distance - b.distance;
+  });
+
+  // Markers (show all filtered)
+  activeMarkers.forEach(m => map.removeLayer(m));
+  activeMarkers = [];
+  filtered.forEach(r => {
+    let label = "H";
+    if (r.type === "cafe") label = "C";
+    else if (r.type === "bakery") label = "B";
+    else if (r.type === "restaurant") label = "R";
+    const icon = makeIcon(r.type, label, !!r.curated);
+    const m = L.marker(r.coords, { icon }).addTo(map);
+    let popupHtml = `<div class="popup-title">${r.name}</div>`;
+    popupHtml += `<div class="popup-row"><strong>${r.type === 'cafe' ? 'Café' : r.type === 'bakery' ? 'Bakery' : r.type === 'restaurant' ? 'Restaurante' : 'Hotel'}</strong> · ${fmtKm(r.distance)} (${walkMin(r.distance)} min)</div>`;
+    if (r.address || (r.curated && r.curated.addr)) popupHtml += `<div class="popup-row">${r.address || r.curated.addr}</div>`;
+    if (r.type === "hotel" && r.curated) {
+      popupHtml += `<div class="popup-row"><strong>Booking ⭐ ${r.curated.booking}/10</strong></div>`;
+      popupHtml += `<div class="popup-row">💵 US$ ${r.curated.min}-${r.curated.max}/noite · ${r.curated.stars}★</div>`;
+      popupHtml += `<div class="popup-row">${r.curated.area}</div>`;
+      popupHtml += `<div class="popup-row"><em>${r.curated.desc}</em></div>`;
+    } else if (r.rating) {
+      popupHtml += `<div class="popup-row"><strong>⭐ ${r.rating}/5</strong> (Google)</div>`;
+      if (r.desc || (r.curated && r.curated.desc)) popupHtml += `<div class="popup-row"><em>${r.desc || r.curated.desc}</em></div>`;
+    } else {
+      popupHtml += `<div class="popup-row" style="color:#aaa;font-style:italic">Sem avaliação na base curada</div>`;
+    }
+    if (r.type === "hotel") popupHtml += `<div class="popup-row"><a href="https://www.booking.com/searchresults.html?ss=${encodeURIComponent(r.name + ' New York')}" target="_blank">Reservar no Booking</a></div>`;
+    else popupHtml += `<div class="popup-row"><a href="https://www.google.com/search?q=${encodeURIComponent(r.name + ' New York')}" target="_blank">Ver no Google</a></div>`;
+    m.bindPopup(popupHtml);
+    activeMarkers.push(m);
+  });
+
+  // Stats
+  const total = currentResults.length;
+  const shown = filtered.length;
+  filterStatus.textContent = `Mostrando ${shown} de ${total} resultados`;
+
+  const tabsHtml = '';
+  const hotelCount = filtered.filter(r => r.type === "hotel").length;
+  const cafeCount = filtered.filter(r => r.type === "cafe").length;
+  const bakeryCount = filtered.filter(r => r.type === "bakery").length;
+  const restCount = filtered.filter(r => r.type === "restaurant").length;
+  const curatedCount = filtered.filter(r => r.curated).length;
+  const stats = `${shown}/${total} · 🏨${hotelCount} ☕${cafeCount} 🥐${bakeryCount} 🍽️${restCount} · ⭐${curatedCount} avaliados`;
+  const sortHtml = `<div class="sort-row"><span>Ordenar:</span><select id="sortSel">
+    <option value="rating" ${currentSort==='rating'?'selected':''}>Melhor avaliação</option>
+    <option value="distance" ${currentSort==='distance'?'selected':''}>Mais perto</option>
+    <option value="price" ${currentSort==='price'?'selected':''}>Menor preço</option>
+  </select></div>`;
+
+  panel.innerHTML = `<h2>📍 ${currentCenter.name}</h2><div class="panel-info">${stats}</div>${tabsHtml}${sortHtml}<div id="placesList"></div>`;
+  const placesList = document.getElementById('placesList');
+
+  if (!filtered.length) {
+    placesList.innerHTML = `<div class="empty-state"><div class="icon">🔧</div><p>Nenhum resultado com os filtros atuais.<br>Relaxe a avaliação mínima ou o preço.</p></div>`;
+    return;
+  }
+
+  filtered.forEach((r, idx) => {
+    const card = document.createElement('div');
+    card.className = "place-card" + (r.curated ? " curated" : "") + (r.type === "hotel" ? " hotel" : "");
+    let typeBadge = '';
+    if (r.type === "cafe") typeBadge = `<span class="badge cafe">Café</span>`;
+    else if (r.type === "bakery") typeBadge = `<span class="badge bakery">Bakery</span>`;
+    else if (r.type === "restaurant") typeBadge = `<span class="badge restaurant">Restaurante</span>`;
+    else typeBadge = `<span class="badge hotel">${r.curated ? r.curated.stars + '★' : 'Hotel'}</span>`;
+    const distBadge = `<span class="badge distance">${fmtKm(r.distance)} · ${walkMin(r.distance)} min</span>`;
+    let ratingBadge = '';
+    if (r.type === "hotel" && r.curated) {
+      const cls = r.curated.booking >= 9.0 ? 'rating-high' : (r.curated.booking >= 8.5 ? 'rating' : 'rating-low');
+      ratingBadge = `<span class="badge ${cls}">Booking ${r.curated.booking}/10</span>`;
+    } else if (r.rating) {
+      const cls = r.rating >= 4.6 ? 'rating-high' : 'rating';
+      ratingBadge = `<span class="badge ${cls}">⭐ ${r.rating}/5</span>`;
+    } else {
+      ratingBadge = `<span class="badge no-rating">sem nota</span>`;
+    }
+    let priceBadge = '';
+    if (r.type === "hotel" && r.curated) priceBadge = `<span class="badge price">$${r.curated.min}-${r.curated.max}</span>`;
+    const descHtml = (r.curated && r.curated.desc) ? `<div class="place-desc">"${r.curated.desc}"</div>` : (r.desc ? `<div class="place-desc">"${r.desc}"</div>` : '');
+    const addrText = r.address || (r.curated ? r.curated.addr : '');
+    const areaText = (r.type === "hotel" && r.curated) ? ` · ${r.curated.area}` : '';
+    const addrHtml = addrText ? `<div class="place-meta">${addrText}${areaText}</div>` : '';
+    const bookingLink = r.type === "hotel" ? `<a href="https://www.booking.com/searchresults.html?ss=${encodeURIComponent(r.name + ' New York')}" target="_blank">🏨 Booking</a>` : '';
+    const googleLink = `<a href="https://www.google.com/search?q=${encodeURIComponent(r.name + ' New York')}" target="_blank">🔍 Google</a>`;
+    const dirLink = `<a href="https://www.google.com/maps/dir/${currentCenter.coords[0]},${currentCenter.coords[1]}/${r.coords[0]},${r.coords[1]}" target="_blank">🗺️ Direções</a>`;
+    card.innerHTML = `<div class="place-name">${idx + 1}. ${r.name}</div>${addrHtml}<div class="badge-row">${typeBadge}${ratingBadge}${priceBadge}${distBadge}</div>${descHtml}<div class="place-links">${bookingLink}${googleLink}${dirLink}</div>`;
+    card.addEventListener('click', (e) => {
+      if (e.target.tagName === 'A' || e.target.tagName === 'BUTTON') return;
+      // Auto-expand map so user can see the result
+      if (!mapEl.classList.contains('expanded')) setMapExpanded(true);
+      setTimeout(() => map.flyTo(r.coords, 17, { duration: 0.5 }), 340);
+      const marker = activeMarkers.find(m => {
+        const ll = m.getLatLng();
+        return Math.abs(ll.lat - r.coords[0]) < 0.0001 && Math.abs(ll.lng - r.coords[1]) < 0.0001;
+      });
+      if (marker) marker.openPopup();
+      // If user has shared location, draw walking route
+      if (userLocation) {
+        drawRoute(userLocation, r.coords, r.name);
+      }
+    });
+    placesList.appendChild(card);
+  });
+
+  panel.querySelectorAll('.tab').forEach(t => {
+    t.addEventListener('click', () => { currentFilter = t.dataset.filter; renderResults(); });
+  });
+  const sortSel = document.getElementById('sortSel');
+  if (sortSel) sortSel.addEventListener('change', (e) => { currentSort = e.target.value; renderResults(); });
+}
+
+// ===================== Geolocation + Routing =====================
+let userLocation = null;
+let userMarker = null;
+let routeLayer = null;
+let routeInfoEl = null;
+const nearMeBtn = document.getElementById('nearMeBtn');
+
+function showUserMarker(coords) {
+  if (userMarker) map.removeLayer(userMarker);
+  const icon = L.divIcon({
+    html: '<div class="user-marker-wrap"></div>',
+    className: '',
+    iconSize: [36, 36],
+    iconAnchor: [18, 18]
+  });
+  userMarker = L.marker(coords, { icon, zIndexOffset: 1000 }).addTo(map);
+  userMarker.bindPopup('<div class="popup-title">📍 Você está aqui</div>');
+}
+
+function clearRoute() {
+  if (routeLayer) { map.removeLayer(routeLayer); routeLayer = null; }
+  if (routeInfoEl) { routeInfoEl.style.display = 'none'; routeInfoEl.innerHTML = ''; routeInfoEl = null; }
+}
+
+async function drawRoute(from, to, destName) {
+  clearRoute();
+  // OSRM expects lng,lat order
+  const url = `https://routing.openstreetmap.de/routed-foot/route/v1/foot/${from[1]},${from[0]};${to[1]},${to[0]}?overview=full&geometries=geojson`;
+  try {
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    if (!data.routes || !data.routes.length) throw new Error('Sem rota encontrada');
+    const route = data.routes[0];
+    const coords = route.geometry.coordinates.map(c => [c[1], c[0]]);
+    routeLayer = L.polyline(coords, {
+      color: '#d4a24a', weight: 5, opacity: 0.85,
+      dashArray: '8, 4', lineCap: 'round'
+    }).addTo(map);
+    map.fitBounds(routeLayer.getBounds(), { padding: [40, 40] });
+
+    const distM = Math.round(route.distance);
+    const distStr = distM < 1000 ? `${distM} m` : `${(distM/1000).toFixed(2)} km`;
+    const timeMin = Math.max(1, Math.round(route.duration / 60));
+
+    routeInfoEl = document.getElementById('routeInfo');
+    routeInfoEl.innerHTML = `🚶 <strong>${destName}</strong>: ${distStr} · ${timeMin} min a pé <button id="clearRouteBtn">✕</button>`;
+    routeInfoEl.style.display = 'flex';
+    document.getElementById('clearRouteBtn').onclick = clearRoute;
+  } catch (err) {
+    alert('Não foi possível calcular a rota a pé: ' + err.message + '\nVocê pode usar o link "Direções" no Google Maps.');
+  }
+}
+
+function requestUserLocation() {
+  if (!navigator.geolocation) {
+    alert('Seu navegador não suporta geolocalização.');
+    return;
+  }
+  nearMeBtn.disabled = true;
+  nearMeBtn.textContent = '📍 Localizando…';
+  navigator.geolocation.getCurrentPosition(
+    (pos) => {
+      userLocation = [pos.coords.latitude, pos.coords.longitude];
+      nearMeBtn.classList.add('active');
+      nearMeBtn.textContent = '📍 Você aqui';
+      nearMeBtn.disabled = false;
+      showUserMarker(userLocation);
+      // Run a search centered on user
+      searchInput.value = 'Minha localização';
+      runSearch('📍 Minha localização', userLocation);
+    },
+    (err) => {
+      nearMeBtn.disabled = false;
+      nearMeBtn.textContent = '📍 Perto de mim';
+      let msg = 'Não consegui acessar sua localização.';
+      if (err.code === 1) msg = 'Permissão negada. Habilite a localização nas configurações do Safari/Chrome.';
+      else if (err.code === 2) msg = 'Localização indisponível no momento.';
+      else if (err.code === 3) msg = 'Timeout ao buscar localização. Tente de novo.';
+      alert(msg);
+    },
+    { enableHighAccuracy: true, timeout: 15000, maximumAge: 60000 }
+  );
+}
+
+nearMeBtn.addEventListener('click', () => {
+  if (nearMeBtn.classList.contains('active') && userLocation) {
+    // Toggle off
+    if (userMarker) { map.removeLayer(userMarker); userMarker = null; }
+    clearRoute();
+    nearMeBtn.classList.remove('active');
+    nearMeBtn.textContent = '📍 Perto de mim';
+    userLocation = null;
+  } else {
+    requestUserLocation();
+  }
+});
+
+// ===================== Map expand/collapse toggle =====================
+const mapEl = document.getElementById('map');
+const mapToggle = document.getElementById('mapToggle');
+const MAP_EXPANDED_KEY = 'nyc-coffee-map-expanded';
+
+function setMapExpanded(expanded) {
+  if (expanded) {
+    mapEl.classList.add('expanded');
+    mapToggle.innerHTML = '⤡ Recolher';
+  } else {
+    mapEl.classList.remove('expanded');
+    mapToggle.innerHTML = '⛶ Expandir';
+  }
+  try { localStorage.setItem(MAP_EXPANDED_KEY, expanded ? '1' : '0'); } catch (e) {}
+  setTimeout(() => map.invalidateSize(), 320);
+}
+
+mapToggle.addEventListener('click', () => {
+  setMapExpanded(!mapEl.classList.contains('expanded'));
+});
+
+// Load saved preference (default: collapsed)
+try {
+  const saved = localStorage.getItem(MAP_EXPANDED_KEY);
+  setMapExpanded(saved === '1');
+} catch (e) {
+  setMapExpanded(false);
+}
+
+
+// ===================== Refresh / Cache clear =====================
+const refreshBtn = document.getElementById('refreshBtn');
+refreshBtn.addEventListener('click', async () => {
+  const ok = confirm('Limpar todo o cache do app e baixar a versão mais recente?\n\n(Suas preferências de busca serão mantidas.)');
+  if (!ok) return;
+  refreshBtn.disabled = true;
+  refreshBtn.innerHTML = '⏳';
+  try {
+    // 1. Unregister all service workers for this scope
+    if ('serviceWorker' in navigator) {
+      const regs = await navigator.serviceWorker.getRegistrations();
+      await Promise.all(regs.map(r => r.unregister()));
+    }
+    // 2. Delete all caches (Cache Storage API)
+    if ('caches' in window) {
+      const keys = await caches.keys();
+      await Promise.all(keys.map(k => caches.delete(k)));
+    }
+    // 3. Tiny delay + hard reload bypassing browser HTTP cache
+    setTimeout(() => {
+      // location.reload(true) is deprecated but still works in many browsers
+      // Most reliable: add timestamp param to URL to defeat all caches
+      const url = new URL(window.location.href);
+      url.searchParams.set('_refresh', Date.now());
+      window.location.replace(url.toString());
+    }, 300);
+  } catch (err) {
+    alert('Erro ao limpar cache: ' + err.message + '\n\nTente fechar o app totalmente e abrir de novo.');
+    refreshBtn.disabled = false;
+    refreshBtn.innerHTML = '🔄';
+  }
+});
+
+// Make version pill clickable to show full info
+const versionPill = document.getElementById('versionPill');
+if (versionPill) {
+  versionPill.style.cursor = 'pointer';
+  versionPill.addEventListener('click', () => {
+    alert('NYC Coffee + Hotel Explorer\n\nVersão: v7\nDeploy: 24/05/2026\nService Worker: nyc-coffee-v7\n\nDados curados em maio/2026.');
+  });
+}
+
+// Init
+updateModeUI();
+updateFilterButtons();
+setTimeout(() => {
+  const p = presets.hotel[0];
+  searchInput.value = p.name;
+  runSearch(p.name, p.coords);
+}, 400);
+
+// ===================== PWA: Install + Service Worker =====================
+let deferredInstallPrompt = null;
+const installBtn = document.getElementById('installBtn');
+const updateBanner = document.getElementById('updateBanner');
+const updateBtn = document.getElementById('updateBtn');
+
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredInstallPrompt = e;
+  installBtn.classList.add('show');
+});
+
+installBtn.addEventListener('click', async () => {
+  if (!deferredInstallPrompt) {
+    if (/iPhone|iPad|iPod/.test(navigator.userAgent)) {
+      alert("Para instalar no iOS:\n1) Toque em Compartilhar (\u2191)\n2) Toque em 'Adicionar a Tela de Inicio'");
+    } else {
+      alert("Use o menu do navegador para instalar (icone de instalacao na barra de enderecos).");
+    }
+    return;
+  }
+  deferredInstallPrompt.prompt();
+  const { outcome } = await deferredInstallPrompt.userChoice;
+  if (outcome === 'accepted') installBtn.classList.remove('show');
+  deferredInstallPrompt = null;
+});
+
+window.addEventListener('appinstalled', () => {
+  installBtn.classList.remove('show');
+  deferredInstallPrompt = null;
+});
+
+if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true) {
+  installBtn.style.display = 'none';
+}
+
+// Mostra hint para iOS Safari (sempre, ja que iOS nao dispara beforeinstallprompt)
+if (/iPhone|iPad|iPod/.test(navigator.userAgent) && !window.navigator.standalone) {
+  installBtn.classList.add('show');
+}
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').then((reg) => {
+      console.log('SW registrado:', reg.scope);
+      reg.addEventListener('updatefound', () => {
+        const newWorker = reg.installing;
+        newWorker.addEventListener('statechange', () => {
+          if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+            updateBanner.classList.add('show');
+            updateBtn.onclick = () => {
+              newWorker.postMessage({ type: 'SKIP_WAITING' });
+              window.location.reload();
+            };
+          }
+        });
+      });
+    }).catch((err) => console.error('SW falhou:', err));
+  });
+}
+</script>
+</body>
+</html>
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            
