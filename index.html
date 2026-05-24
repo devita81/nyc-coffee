@@ -853,6 +853,8 @@ let currentResults = [];
 let currentFilter = "all";
 let currentSort = "rating";
 let currentCenter = null;
+let centerType = null;
+let activeFilters = new Set();
 
 const searchInput = document.getElementById('searchInput');
 const autocomplete = document.getElementById('autocomplete');
