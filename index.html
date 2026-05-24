@@ -1428,7 +1428,15 @@ function renderPlaceCard(container, r, idx) {
     if (routeOrigin) drawRoute(routeOrigin, r.coords, r.name, originName);
     renderResults(); // re-renderiza em modo foco
     // Scroll pro topo do painel pra ver o mapa + card focado
-    setTimeout(() => document.getElementById('mainContent')?.scrollTo({ top: 0, behavior: 'smooth' }), 100);
+    // Scroll pra mostrar o mapa no topo da viewport. Espera o panel re-renderizar +
+    // animacao do mapa expandir. Usa scrollTop direto (smooth pode ser interrompido pelo fitBounds).
+    setTimeout(() => {
+      const mapCard = document.getElementById('mapCard');
+      const main = document.getElementById('mainContent');
+      if (mapCard && main) {
+        main.scrollTop = Math.max(0, mapCard.offsetTop - 8);
+      }
+    }, 500);
   });
   container.appendChild(card);
 }
@@ -1572,6 +1580,7 @@ function showUserMarker(coords) {
 function clearRoute() {
   if (routeLayer) {
     if (routeLayer._originMarker) map.removeLayer(routeLayer._originMarker);
+    if (routeLayer._halo) map.removeLayer(routeLayer._halo);
     map.removeLayer(routeLayer); routeLayer = null;
   }
   if (routeInfoEl) { routeInfoEl.style.display = 'none'; routeInfoEl.innerHTML = ''; routeInfoEl = null; }
@@ -1599,23 +1608,18 @@ async function drawRoute(from, to, destName, originName) {
     if (!data.routes || !data.routes.length) throw new Error('Sem rota encontrada');
     const route = data.routes[0];
     const coords = route.geometry.coordinates.map(c => [c[1], c[0]]);
-    routeLayer = L.polyline(coords, {
-      color: '#d4a24a', weight: 5, opacity: 0.85,
-      dashArray: '8, 4', lineCap: 'round'
+    // "Halo" branco por baixo pra contraste; linha azul vibrante pontilhada por cima
+    const haloLayer = L.polyline(coords, {
+      color: 'white', weight: 11, opacity: 0.95, lineCap: 'round'
     }).addTo(map);
-    // Guarda o marker pra ser limpo junto com a rota
+    routeLayer = L.polyline(coords, {
+      color: '#1d4ed8', weight: 6, opacity: 1,
+      dashArray: '14, 8', lineCap: 'round'
+    }).addTo(map);
+    // Guarda marker + halo pra serem limpos junto com a rota
     if (originMarker) routeLayer._originMarker = originMarker;
+    routeLayer._halo = haloLayer;
     map.fitBounds(routeLayer.getBounds(), { padding: [40, 40] });
-
-    const distM = Math.round(route.distance);
-    const distStr = distM < 1000 ? `${distM} m` : `${(distM/1000).toFixed(2)} km`;
-    const timeMin = Math.max(1, Math.round(route.duration / 60));
-    const origLabel = originName || 'Você';
-
-    routeInfoEl = document.getElementById('routeInfo');
-    routeInfoEl.innerHTML = `🚶 <strong>${origLabel}</strong> → <strong>${destName}</strong>: ${distStr} · ${timeMin} min a pé <button id="clearRouteBtn">✕</button>`;
-    routeInfoEl.style.display = 'flex';
-    document.getElementById('clearRouteBtn').onclick = clearRoute;
   } catch (err) {
     if (originMarker) map.removeLayer(originMarker);
     alert('Não foi possível calcular a rota a pé: ' + err.message + '\nVocê pode usar o link "Direções" no Google Maps.');
