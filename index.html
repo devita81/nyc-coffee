@@ -334,9 +334,20 @@
     display: flex; flex-direction: column; align-items: center; justify-content: center;
     gap: 2px; color: var(--muted); font-weight: 600;
     padding: 6px 4px;
-    transition: color 0.2s;
+    opacity: 0.32;
+    filter: grayscale(0.7);
+    transition: opacity 0.2s, filter 0.2s, color 0.2s;
   }
-  .nav-item.active { color: var(--purple); }
+  .nav-item.active {
+    color: var(--purple);
+    opacity: 1;
+    filter: none;
+  }
+  .nav-item.disabled {
+    opacity: 0.18;
+    filter: grayscale(1);
+    cursor: not-allowed;
+  }
   .nav-icon { font-size: 22px; line-height: 1; }
   .nav-label { font-size: 10px; }
 
@@ -1091,6 +1102,12 @@ async function doSearchFromInput() {
   if (!q) return;
   errorBox.innerHTML = '';
   const nq = normalize(q);
+  // Atalho: se a query for "minha localizacao" / "voce aqui" e ja' temos geo, re-roda
+  if (userLocation && (nq.includes('minha localiza') || nq.includes('voce aqui') || nq === 'aqui' || q === '📍')) {
+    searchInput.value = '';
+    runSearch('📍 Minha localização', userLocation);
+    return;
+  }
   const internal = curatedHotels.find(h => normalize(h.name).includes(nq) || nq.includes(normalize(h.name)))
     || curatedPlaces.find(p => normalize(p.name).includes(nq) || (p.aliases||[]).some(a => normalize(a) === nq));
   if (internal) { runSearch(internal.name, internal.coords); return; }
@@ -1486,8 +1503,11 @@ function requestUserLocation() {
       nearMeBtn.textContent = '📍 Você aqui';
       nearMeBtn.disabled = false;
       showUserMarker(userLocation);
-      // Run a search centered on user
-      searchInput.value = 'Minha localização';
+      // Limpa o input: o ponto central ja' aparece no modeSubtitle.
+      // Manter "Minha localizacao" no input fazia o botao "Buscar" tentar
+      // geocodificar isso na Nominatim e falhar.
+      searchInput.value = '';
+      autocomplete.classList.remove('show');
       runSearch('📍 Minha localização', userLocation);
     },
     (err) => {
