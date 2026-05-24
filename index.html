@@ -203,6 +203,9 @@
   /* Quick actions in search card */
   .quick-row { margin-bottom: 12px; display: flex; gap: 6px; }
   .quick-row .quick-btn { flex: 1; padding: 12px; font-size: 14px; }
+  .quick-btn-secondary { background: white; color: var(--purple); border: 2px solid var(--purple-light) !important; }
+  .quick-btn-secondary:hover { background: var(--purple-light); color: var(--purple); }
+  .quick-btn-secondary.active { background: var(--gold-accent); color: white; border-color: var(--gold-accent) !important; }
   .or-divider {
     display: flex; align-items: center; gap: 10px;
     margin: 4px 0 10px; color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em;
@@ -457,7 +460,8 @@
   <!-- Search card -->
   <div class="card" id="searchCard">
     <div class="quick-row">
-      <button id="nearMeBtn" class="quick-btn">📍 Usar minha localização</button>
+      <button id="nearMeBtn" class="quick-btn">📍 Minha localização</button>
+      <button id="topBtn" class="quick-btn quick-btn-secondary">🏆 Top NYC</button>
     </div>
     <div class="or-divider">ou busque um endereço</div>
     <div class="search-input-wrap">
@@ -1317,6 +1321,9 @@ async function runSearch(name, coords) {
   if (subEl) subEl.textContent = name;
   // Esconde os chips de lugares populares quando ja' existe uma busca ativa
   if (presetsBlock) presetsBlock.style.display = 'none';
+  // Reset estado do Top NYC quando faz busca normal
+  const tb = document.getElementById('topBtn');
+  if (tb) { tb.classList.remove('active'); tb.textContent = '🏆 Top NYC'; }
   activeFilters = new Set(validTypes());
   updateFilterButtons();
   const centerLabel = centerType === 'hotel' ? "🏨" : centerType === 'cafe' ? "☕" : centerType === 'bakery' ? "🥐" : centerType === 'restaurant' ? "🍽️" : "📍";
@@ -1590,12 +1597,80 @@ nearMeBtn.addEventListener('click', () => {
     if (userMarker) { map.removeLayer(userMarker); userMarker = null; }
     clearRoute();
     nearMeBtn.classList.remove('active');
-    nearMeBtn.textContent = '📍 Perto de mim';
+    nearMeBtn.textContent = '📍 Minha localização';
     userLocation = null;
   } else {
     requestUserLocation();
   }
 });
+
+// ===================== Top NYC: ranking de cafes + bakeries =====================
+const topBtn = document.getElementById('topBtn');
+function runTopRanking() {
+  clearMarkers();
+  clearRoute();
+  errorBox.innerHTML = '';
+  setTimeout(() => map.invalidateSize(), 50);
+
+  // Top: cafes + bakeries dos curados, sort por rating desc
+  const top = [...curatedPlaces]
+    .filter(p => p.type === 'cafe' || p.type === 'bakery')
+    .sort((a, b) => b.rating - a.rating)
+    .slice(0, 30);
+
+  const center = userLocation || [40.732, -73.997];
+  const centerName = userLocation ? '🏆 Top cafés & bakeries (de você)' : '🏆 Top cafés & bakeries de NYC';
+  currentCenter = { name: centerName, coords: center };
+  centerType = null;
+  activeFilters = new Set(['cafe', 'bakery']);
+
+  currentResults = top.map(p => ({
+    ...p,
+    distance: dist(center, p.coords),
+    curated: p,
+    rating: p.rating
+  }));
+
+  const subEl = document.getElementById('modeSubtitle');
+  if (subEl) subEl.textContent = centerName;
+  if (presetsBlock) presetsBlock.style.display = 'none';
+
+  topBtn.classList.add('active');
+  topBtn.textContent = '🏆 Top NYC ✓';
+
+  updateFilterButtons();
+  currentSort = 'rating';
+  renderResults();
+
+  if (currentResults.length) {
+    const bounds = L.latLngBounds(currentResults.map(r => r.coords));
+    if (userLocation) { bounds.extend(userLocation); showUserMarker(userLocation); }
+    map.fitBounds(bounds, { padding: [40, 40] });
+  }
+
+  // Pede localizacao em background se ainda nao temos — assim as rotas a pe funcionam
+  if (!userLocation && navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        userLocation = [pos.coords.latitude, pos.coords.longitude];
+        nearMeBtn.classList.add('active');
+        nearMeBtn.textContent = '📍 Você aqui';
+        showUserMarker(userLocation);
+        // Recalcula distancias relativas a usuario e re-renderiza
+        currentResults.forEach(r => r.distance = dist(userLocation, r.coords));
+        currentCenter = { name: '🏆 Top cafés & bakeries (de você)', coords: userLocation };
+        if (subEl) subEl.textContent = currentCenter.name;
+        renderResults();
+        const b = L.latLngBounds(currentResults.map(r => r.coords));
+        b.extend(userLocation);
+        map.fitBounds(b, { padding: [40, 40] });
+      },
+      () => {}, // usuario negou — lista funciona, so' sem rota
+      { enableHighAccuracy: false, timeout: 8000, maximumAge: 60000 }
+    );
+  }
+}
+topBtn.addEventListener('click', runTopRanking);
 
 // ===================== Map expand/collapse toggle =====================
 const mapEl = document.getElementById('map');
