@@ -403,7 +403,7 @@
     </div>
   </div>
   <div class="topbar-right">
-    <span class="version-pill" id="versionPill" title="Versão / Data do deploy">v9 · 24/mai</span>
+    <span class="version-pill" id="versionPill" title="Versão / Data do deploy"></span>
     <button id="refreshBtn" class="topbar-btn show" title="Limpar cache e atualizar app">🔄</button>
     <button id="installBtn" class="topbar-btn" title="Instalar">⬇</button>
   </div>
@@ -848,6 +848,11 @@ function makeIcon(type, label, isCurated, isCenter) {
 }
 
 // ===================== State =====================
+const APP_VERSION = "v11";
+const APP_DATE = "24/mai";
+const versionPillEl = document.getElementById('versionPill');
+if (versionPillEl) versionPillEl.textContent = APP_VERSION + " · " + APP_DATE;
+
 let mode = "hotel";
 let currentResults = [];
 let currentFilter = "all";
@@ -1621,18 +1626,27 @@ if (/iPhone|iPad|iPod/.test(navigator.userAgent) && !window.navigator.standalone
 }
 
 if ('serviceWorker' in navigator) {
+  // Auto-reload quando novo SW assume controle
+  let reloadingForNewSW = false;
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (reloadingForNewSW) return;
+    reloadingForNewSW = true;
+    window.location.reload();
+  });
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('sw.js').then((reg) => {
       console.log('SW registrado:', reg.scope);
+      // Forca check de update no load (relevante quando PWA standalone reabre)
+      reg.update().catch(() => {});
       reg.addEventListener('updatefound', () => {
         const newWorker = reg.installing;
         newWorker.addEventListener('statechange', () => {
           if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+            // Mostra banner E manda skip-waiting (sw.js ja' usa skipWaiting/clients.claim,
+            // mas se algum browser exigir o postMessage, garante.)
             updateBanner.classList.add('show');
-            updateBtn.onclick = () => {
-              newWorker.postMessage({ type: 'SKIP_WAITING' });
-              window.location.reload();
-            };
+            newWorker.postMessage({ type: 'SKIP_WAITING' });
+            updateBtn.onclick = () => window.location.reload();
           }
         });
       });
