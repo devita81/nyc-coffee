@@ -854,7 +854,8 @@ let currentFilter = "all";
 let currentSort = "rating";
 let currentCenter = null;
 let centerType = null;
-let activeFilters = new Set();
+const ALL_TYPES = ['hotel', 'cafe', 'bakery', 'restaurant'];
+let activeFilters = new Set(ALL_TYPES);
 
 const searchInput = document.getElementById('searchInput');
 const autocomplete = document.getElementById('autocomplete');
@@ -873,7 +874,12 @@ const resetFilters = document.getElementById('resetFilters');
 const filterStatus = document.getElementById('filterStatus');
 const filterPriceGroup = document.getElementById('filterPriceGroup');
 
-// Multi-select handler: bottom nav filtra categorias
+// Multi-select handler: bottom nav filtra categorias.
+// Modelo: cada categoria comeca ATIVA. Click apaga/liga.
+// "Todos" = reset (liga todas as validas).
+function validTypes() {
+  return ALL_TYPES.filter(t => t !== centerType);
+}
 function updateFilterButtons() {
   document.querySelectorAll('.nav-item').forEach(btn => {
     const f = btn.dataset.filter;
@@ -884,13 +890,15 @@ function updateFilterButtons() {
       btn.classList.add('disabled');
       btn.disabled = true;
     } else if (f === 'all') {
-      if (activeFilters.size === 0) btn.classList.add('active');
+      // Lit quando todas as categorias validas estao ativas
+      const allOn = validTypes().every(t => activeFilters.has(t));
+      if (allOn) btn.classList.add('active');
     } else {
       if (activeFilters.has(f)) btn.classList.add('active');
     }
   });
   // Price slider so' visivel quando filtrando Hoteis
-  const showPrice = activeFilters.has('hotel') || (activeFilters.size === 0 && centerType !== 'hotel');
+  const showPrice = activeFilters.has('hotel');
   if (filterPriceGroup) filterPriceGroup.style.display = showPrice ? '' : 'none';
   updateRatingFilterLabel();
 }
@@ -899,7 +907,8 @@ document.querySelectorAll('.nav-item').forEach(btn => {
     if (btn.disabled) return;
     const f = btn.dataset.filter;
     if (f === 'all') {
-      activeFilters.clear();
+      // Reset: liga todas as categorias validas
+      activeFilters = new Set(validTypes());
     } else {
       if (activeFilters.has(f)) activeFilters.delete(f);
       else activeFilters.add(f);
@@ -1215,7 +1224,7 @@ async function runSearch(name, coords) {
   centerType = detectSearchType(name, coords);
   const subEl = document.getElementById('modeSubtitle');
   if (subEl) subEl.textContent = name;
-  activeFilters.clear();
+  activeFilters = new Set(validTypes());
   updateFilterButtons();
   const centerLabel = centerType === 'hotel' ? "🏨" : centerType === 'cafe' ? "☕" : centerType === 'bakery' ? "🥐" : centerType === 'restaurant' ? "🍽️" : "📍";
   const centerColorType = centerType || 'hotel';
@@ -1257,7 +1266,7 @@ function renderResults() {
   const onlyR = onlyRated.checked;
   let filtered = currentResults.filter(r => {
     if (centerType && r.type === centerType) return false; // exclui categoria do alvo
-    if (activeFilters.size > 0 && !activeFilters.has(r.type)) return false; // multi-select
+    if (!activeFilters.has(r.type)) return false; // categoria desligada na barra
     if (onlyR && !r.rating) return false;
     if (!passesRatingFilter(r, ratingTh)) return false;
     if (r.type === 'hotel' && priceMax < 2000) {
