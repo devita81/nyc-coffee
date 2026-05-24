@@ -315,6 +315,7 @@
   .badge.rating-high { background: rgba(16,185,129,0.18); color: #047857; }
   .badge.rating-low { background: #e9e6f0; color: var(--muted); }
   .badge.price { background: var(--purple-light); color: var(--purple); }
+  .badge.cuisine { background: rgba(201,163,93,0.18); color: #8a6a25; }
   .badge.no-rating { background: #f3f0f9; color: var(--muted); font-style: italic; }
   .badge.curated { background: var(--purple); color: white; }
   .place-desc { font-size: 11px; color: var(--muted); margin-top: 4px; font-style: italic; }
@@ -858,6 +859,35 @@ function clearMarkers() {
   if (activeCenterMarker) { map.removeLayer(activeCenterMarker); activeCenterMarker = null; }
 }
 function colorFor(type) { if (type === "hotel") return "#6b4423"; if (type === "cafe") return "#2e7d5b"; if (type === "restaurant") return "#9c2a3a"; return "#b85c38"; }
+
+const CUISINE_PT = {
+  italian: "Italiana", pizza: "Pizza", japanese: "Japonesa", sushi: "Sushi", ramen: "Ramen",
+  chinese: "Chinesa", mexican: "Mexicana", american: "Americana", burger: "Hambúrguer",
+  french: "Francesa", thai: "Tailandesa", indian: "Indiana", korean: "Coreana",
+  vietnamese: "Vietnamita", spanish: "Espanhola", greek: "Grega", turkish: "Turca",
+  lebanese: "Libanesa", mediterranean: "Mediterrânea", asian: "Asiática",
+  steakhouse: "Steakhouse", seafood: "Frutos do mar", vegetarian: "Vegetariana",
+  vegan: "Vegana", sandwich: "Sanduíches", barbecue: "Churrasco", bbq: "BBQ",
+  brazilian: "Brasileira", peruvian: "Peruana", argentinian: "Argentina",
+  pub: "Pub", bar: "Bar", deli: "Deli", brunch: "Brunch", breakfast: "Café da manhã",
+  dessert: "Sobremesas", ice_cream: "Sorvete", regional: "Regional", fusion: "Fusion",
+  noodle: "Macarrão", chicken: "Frango", fish: "Peixe"
+};
+function formatCuisine(cuisine) {
+  if (!cuisine) return "";
+  return cuisine.split(/[;,]/).slice(0, 2).map(c => {
+    const k = c.trim().toLowerCase();
+    return CUISINE_PT[k] || (k.charAt(0).toUpperCase() + k.slice(1).replace(/_/g, ' '));
+  }).join(' · ');
+}
+function formatPriceRange(p) {
+  if (!p) return "";
+  const t = p.trim();
+  if (/^\$+$/.test(t)) return t;
+  if (/^[1-4]$/.test(t)) return "$".repeat(parseInt(t));
+  const map = { cheap: "$", inexpensive: "$", moderate: "$$", mid: "$$", expensive: "$$$", premium: "$$$", luxury: "$$$$" };
+  return map[t.toLowerCase()] || "";
+}
 function makeIcon(type, label, isCurated, isCenter) {
   const color = colorFor(type);
   const border = isCurated ? "#d4a24a" : "white";
@@ -1218,14 +1248,26 @@ async function enrichWithOSM(coords, r) {
       type,
       coords: c,
       address: [tags["addr:housenumber"], tags["addr:street"]].filter(Boolean).join(' '),
-      website: tags.website || tags["contact:website"] || ""
+      website: tags.website || tags["contact:website"] || "",
+      cuisine: tags.cuisine || "",
+      priceRange: tags["price:range"] || tags.price || tags.cost || ""
     };
     if (seen.has(normalize(item.name))) return;
     // Try match curated
     const cur = type === "hotel" ? findCuratedHotel(item) : findCuratedPlace(item);
     if (cur && seen.has(normalize(cur.name))) return;
     if (cur) {
-      currentResults.push({ ...cur, type: type === "hotel" ? "hotel" : cur.type, distance: dist(coords, cur.coords), curated: cur, rating: type === "hotel" ? cur.booking : cur.rating, coords: cur.coords });
+      // Merge: curated wins por padrao, mas pega cuisine/price do OSM se curated nao tiver
+      currentResults.push({
+        ...cur,
+        type: type === "hotel" ? "hotel" : cur.type,
+        distance: dist(coords, cur.coords),
+        curated: cur,
+        rating: type === "hotel" ? cur.booking : cur.rating,
+        coords: cur.coords,
+        cuisine: cur.cuisine || item.cuisine,
+        priceRange: cur.priceRange || item.priceRange
+      });
       seen.add(normalize(cur.name));
     } else {
       currentResults.push({ ...item, distance: dist(coords, item.coords), curated: null, rating: null, desc: "" });
@@ -1402,6 +1444,15 @@ function renderResults() {
     }
     let priceBadge = '';
     if (r.type === "hotel" && r.curated) priceBadge = `<span class="badge price">$${r.curated.min}-${r.curated.max}</span>`;
+    else if (r.priceRange) {
+      const pr = formatPriceRange(r.priceRange);
+      if (pr) priceBadge = `<span class="badge price">${pr}</span>`;
+    }
+    let cuisineBadge = '';
+    if (r.type === "restaurant" && r.cuisine) {
+      const c = formatCuisine(r.cuisine);
+      if (c) cuisineBadge = `<span class="badge cuisine">${c}</span>`;
+    }
     const descHtml = (r.curated && r.curated.desc) ? `<div class="place-desc">"${r.curated.desc}"</div>` : (r.desc ? `<div class="place-desc">"${r.desc}"</div>` : '');
     const addrText = r.address || (r.curated ? r.curated.addr : '');
     const areaText = (r.type === "hotel" && r.curated) ? ` · ${r.curated.area}` : '';
@@ -1409,7 +1460,7 @@ function renderResults() {
     const bookingLink = r.type === "hotel" ? `<a href="https://www.booking.com/searchresults.html?ss=${encodeURIComponent(r.name + ' New York')}" target="_blank">🏨 Booking</a>` : '';
     const googleLink = `<a href="https://www.google.com/search?q=${encodeURIComponent(r.name + ' New York')}" target="_blank">🔍 Google</a>`;
     const dirLink = `<a href="https://www.google.com/maps/dir/${currentCenter.coords[0]},${currentCenter.coords[1]}/${r.coords[0]},${r.coords[1]}" target="_blank">🗺️ Direções</a>`;
-    card.innerHTML = `<div class="place-name">${idx + 1}. ${r.name}</div>${addrHtml}<div class="badge-row">${typeBadge}${ratingBadge}${priceBadge}${distBadge}</div>${descHtml}<div class="place-links">${bookingLink}${googleLink}${dirLink}</div>`;
+    card.innerHTML = `<div class="place-name">${idx + 1}. ${r.name}</div>${addrHtml}<div class="badge-row">${typeBadge}${cuisineBadge}${ratingBadge}${priceBadge}${distBadge}</div>${descHtml}<div class="place-links">${bookingLink}${googleLink}${dirLink}</div>`;
     card.addEventListener('click', (e) => {
       if (e.target.tagName === 'A' || e.target.tagName === 'BUTTON') return;
       // Auto-expand map so user can see the result
