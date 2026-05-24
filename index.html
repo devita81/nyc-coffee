@@ -1566,38 +1566,39 @@ function renderPlaceCard(container, r, idx) {
   card.innerHTML = `<div class="place-name">${idx}. ${r.name}</div>${addrHtml}<div class="badge-row">${typeBadge}${cuisineBadge}${ratingBadge}${priceBadge}${distBadge}</div>${descHtml}<div class="place-links">${bookingLink}${googleLink}${dirLink}</div>`;
   card.addEventListener('click', (e) => {
     if (e.target.tagName === 'A' || e.target.tagName === 'BUTTON') return;
-    // Foca o item: lista colapsa pra so este card, mapa centraliza e desenha rota
-    focusedItem = r;
-    // Origem da rota: userLocation se disponivel, senao o centro da busca
-    const routeOrigin = userLocation || (currentCenter ? currentCenter.coords : null);
-    const originName = userLocation ? 'Você' : (currentCenter ? currentCenter.name.replace(/^📍\s*/, '').replace(/^🏆\s*/, '') : null);
-    if (!mapEl.classList.contains('expanded')) setMapExpanded(true);
-    setTimeout(() => {
-      map.flyTo(r.coords, 16, { duration: 0.5 });
-      if (routeOrigin) {
-        const b = L.latLngBounds([routeOrigin, r.coords]);
-        setTimeout(() => map.fitBounds(b, { padding: [60, 60] }), 600);
-      }
-    }, 340);
-    const marker = activeMarkers.find(m => {
-      const ll = m.getLatLng();
-      return Math.abs(ll.lat - r.coords[0]) < 0.0001 && Math.abs(ll.lng - r.coords[1]) < 0.0001;
-    });
-    if (marker) marker.openPopup();
-    if (routeOrigin) drawRoute(routeOrigin, r.coords, r.name, originName);
-    renderResults(); // re-renderiza em modo foco
-    // Scroll pro topo do painel pra ver o mapa + card focado
-    // Scroll pra mostrar o mapa no topo da viewport. Espera o panel re-renderizar +
-    // animacao do mapa expandir. Usa scrollTop direto (smooth pode ser interrompido pelo fitBounds).
-    setTimeout(() => {
-      const mapCard = document.getElementById('mapCard');
-      const main = document.getElementById('mainContent');
-      if (mapCard && main) {
-        main.scrollTop = Math.max(0, mapCard.offsetTop - 8);
-      }
-    }, 500);
+    focusOnPlace(r);
   });
   container.appendChild(card);
+}
+
+// Foca um lugar: colapsa lista, mapa centraliza, rota desenhada, scroll pro mapa.
+// Reutilizado pelo click no card e no marker do mapa.
+function focusOnPlace(r) {
+  focusedItem = r;
+  const routeOrigin = userLocation || (currentCenter ? currentCenter.coords : null);
+  const originName = userLocation ? 'Você' : (currentCenter ? currentCenter.name.replace(/^📍\s*/, '').replace(/^🏆\s*/, '') : null);
+  if (!mapEl.classList.contains('expanded')) setMapExpanded(true);
+  setTimeout(() => {
+    map.flyTo(r.coords, 16, { duration: 0.5 });
+    if (routeOrigin) {
+      const b = L.latLngBounds([routeOrigin, r.coords]);
+      setTimeout(() => map.fitBounds(b, { padding: [60, 60] }), 600);
+    }
+  }, 340);
+  const marker = activeMarkers.find(m => {
+    const ll = m.getLatLng();
+    return Math.abs(ll.lat - r.coords[0]) < 0.0001 && Math.abs(ll.lng - r.coords[1]) < 0.0001;
+  });
+  if (marker) marker.openPopup();
+  if (routeOrigin) drawRoute(routeOrigin, r.coords, r.name, originName);
+  renderResults();
+  setTimeout(() => {
+    const mapCard = document.getElementById('mapCard');
+    const main = document.getElementById('mainContent');
+    if (mapCard && main) {
+      main.scrollTop = Math.max(0, mapCard.offsetTop - 8);
+    }
+  }, 500);
 }
 
 function renderResults() {
@@ -1657,6 +1658,8 @@ function renderResults() {
     if (r.type === "hotel") popupHtml += `<div class="popup-row"><a href="https://www.booking.com/searchresults.html?ss=${encodeURIComponent(r.name + ' New York')}" target="_blank">Reservar no Booking</a></div>`;
     else popupHtml += `<div class="popup-row"><a href="https://www.google.com/search?q=${encodeURIComponent(r.name + ' New York')}" target="_blank">Ver no Google</a></div>`;
     m.bindPopup(popupHtml);
+    // Click no marker do mapa = mesmo comportamento do click no card
+    m.on('click', () => focusOnPlace(r));
     activeMarkers.push(m);
   });
 
