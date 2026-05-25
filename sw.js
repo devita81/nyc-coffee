@@ -2,10 +2,10 @@
 // Estratégia: cache-first para app shell, network-first para APIs,
 // stale-while-revalidate para tiles do mapa (offline parcial).
 
-const CACHE_VERSION = "nyc-coffee-v29";
-const APP_SHELL = "nyc-coffee-shell-v29";
-const RUNTIME = "nyc-coffee-runtime-v29";
-const TILES = "nyc-coffee-tiles-v29";
+const CACHE_VERSION = "nyc-coffee-v30";
+const APP_SHELL = "nyc-coffee-shell-v30";
+const RUNTIME = "nyc-coffee-runtime-v30";
+const TILES = "nyc-coffee-tiles-v30";
 
 const SHELL_ASSETS = [
   "./",
@@ -61,6 +61,7 @@ self.addEventListener("fetch", (event) => {
     url.hostname.includes("lz4.overpass-api.de") ||
     url.hostname.includes("z.overpass-api.de") ||
     url.hostname.includes("routing.openstreetmap.de") ||
+    url.hostname.includes("en.wikipedia.org") ||
     url.pathname.endsWith("/version.json")
   ) {
     event.respondWith(
@@ -73,6 +74,12 @@ self.addEventListener("fetch", (event) => {
 
   // Tiles do mapa: stale-while-revalidate
   if (url.hostname.endsWith("tile.openstreetmap.org")) {
+    event.respondWith(staleWhileRevalidate(req, TILES));
+    return;
+  }
+
+  // Imagens do Wikimedia Commons: cache-first (raramente mudam)
+  if (url.hostname.includes("upload.wikimedia.org")) {
     event.respondWith(staleWhileRevalidate(req, TILES));
     return;
   }
