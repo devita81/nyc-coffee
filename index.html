@@ -474,9 +474,39 @@
   }
   .map-toggle-btn:hover { background: var(--purple); color: white; border-color: var(--purple); }
   .map-toggle-btn:active { transform: scale(0.96); }
+  .map-toggle-btn .icon { color: currentColor; stroke: currentColor; }
   .map-wrap { position: relative; }
   #map { height: 180px; transition: height 0.3s ease; }
   #map.expanded { height: 400px; }
+  /* Fullscreen map */
+  #map.fullscreen {
+    position: fixed !important;
+    top: 0; left: 0; right: 0; bottom: 0;
+    width: 100vw !important; height: 100vh !important;
+    z-index: 1000 !important;
+    border-radius: 0;
+    transition: none;
+  }
+  .map-fullscreen-close {
+    position: fixed;
+    top: calc(env(safe-area-inset-top) + 12px);
+    right: 12px;
+    z-index: 1001;
+    width: 44px; height: 44px;
+    border-radius: 50%;
+    background: var(--ink); color: white;
+    border: 2px solid white;
+    cursor: pointer;
+    display: none;
+    align-items: center; justify-content: center;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.40);
+    transition: transform 0.12s;
+  }
+  .map-fullscreen-close.show { display: flex; }
+  .map-fullscreen-close:active { transform: scale(0.92); }
+  .map-fullscreen-close .icon { width: 20px; height: 20px; stroke-width: 2.2; }
+  body.map-fullscreen-active .bottom-nav { display: none; }
+  body.map-fullscreen-active .topbar { display: none; }
   .leaflet-control-zoom a { border-radius: 8px !important; color: var(--purple) !important; font-weight: 700 !important; }
 
   /* Results */
@@ -798,6 +828,7 @@
     <symbol id="i-sparkles" viewBox="0 0 24 24"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"/></symbol>
     <symbol id="i-star" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></symbol>
     <symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol>
+    <symbol id="i-maximize" viewBox="0 0 24 24"><path d="M8 3H5a2 2 0 0 0-2 2v3M21 8V5a2 2 0 0 0-2-2h-3M3 16v3a2 2 0 0 0 2 2h3M16 21h3a2 2 0 0 0 2-2v-3"/></symbol>
   </defs>
 </svg>
 
@@ -964,7 +995,10 @@
   <div class="card map-card" id="mapCard">
     <div class="map-header-row">
       <span class="card-title"><span class="card-icon"><svg class="icon icon-sm"><use href="#i-map"/></svg></span> Mapa</span>
-      <button id="mapToggle" class="map-toggle-btn">⛶ Expandir</button>
+      <div style="display:flex; gap:6px;">
+        <button id="mapToggle" class="map-toggle-btn">⛶ Expandir</button>
+        <button id="mapFullscreenBtn" class="map-toggle-btn" title="Tela cheia"><svg class="icon icon-sm"><use href="#i-maximize"/></svg> Tela cheia</button>
+      </div>
     </div>
     <div class="map-wrap">
       <div id="map"></div>
@@ -998,6 +1032,11 @@
   </div>
 
 </main>
+
+<!-- Botao fechar tela cheia (flutuante, so' visivel em fullscreen) -->
+<button class="map-fullscreen-close" id="mapFullscreenClose" type="button" title="Fechar tela cheia">
+  <svg class="icon"><use href="#i-x"/></svg>
+</button>
 
 <!-- Bottom nav -->
 <nav class="bottom-nav">
@@ -2734,6 +2773,37 @@ function setMapExpanded(expanded) {
 
 mapToggle.addEventListener('click', () => {
   setMapExpanded(!mapEl.classList.contains('expanded'));
+});
+
+// ===================== Map fullscreen mode =====================
+const mapFullscreenBtn = document.getElementById('mapFullscreenBtn');
+const mapFullscreenClose = document.getElementById('mapFullscreenClose');
+function setMapFullscreen(on) {
+  if (on) {
+    mapEl.classList.add('fullscreen');
+    document.body.classList.add('map-fullscreen-active');
+    mapFullscreenClose.classList.add('show');
+  } else {
+    mapEl.classList.remove('fullscreen');
+    document.body.classList.remove('map-fullscreen-active');
+    mapFullscreenClose.classList.remove('show');
+  }
+  // Espera o reflow + recalcula tile coverage
+  setTimeout(() => {
+    map.invalidateSize();
+    // Reaplica fitBounds pros markers atuais se houver
+    if (activeMarkers.length > 0) {
+      const bounds = L.latLngBounds(activeMarkers.map(m => m.getLatLng()));
+      if (userLocation) bounds.extend(userLocation);
+      map.fitBounds(bounds, { padding: [40, 40], maxZoom: 17 });
+    }
+  }, 80);
+}
+mapFullscreenBtn.addEventListener('click', () => setMapFullscreen(true));
+mapFullscreenClose.addEventListener('click', () => setMapFullscreen(false));
+// ESC sai do fullscreen
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && mapEl.classList.contains('fullscreen')) setMapFullscreen(false);
 });
 
 // Load saved preference (default: collapsed)
