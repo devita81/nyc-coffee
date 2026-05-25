@@ -346,6 +346,51 @@
   .discover-cta .discover-icon { color: var(--gold-deep); flex-shrink: 0; }
   .discover-cta-fav { border-left-color: #d6336c; }
   .discover-cta-fav .discover-icon { color: #d6336c; }
+  .discover-cta-ai { border-left-color: var(--gold-accent); }
+  .discover-cta-ai .discover-icon { color: var(--gold-deep); }
+  /* AI panel */
+  .ai-panel { background: linear-gradient(180deg, white, #faf8f2); border-left: 3px solid var(--gold-accent); }
+  .ai-panel textarea {
+    width: 100%; min-height: 78px;
+    border: 1px solid var(--border); border-radius: 10px;
+    padding: 12px;
+    font-family: var(--font-sans); font-size: 14px; font-weight: 500; color: var(--ink);
+    background: white; outline: none;
+    resize: vertical;
+    margin-top: 4px;
+  }
+  .ai-panel textarea:focus { border-color: var(--gold-deep); box-shadow: 0 0 0 3px rgba(201,163,93,0.14); }
+  .ai-submit-btn {
+    display: flex; align-items: center; gap: 8px;
+    background: linear-gradient(180deg, var(--gold-accent), var(--gold-deep)); color: white;
+    border: none; border-radius: 10px;
+    padding: 11px 18px; font-weight: 600; font-size: 14px;
+    cursor: pointer; margin-top: 12px;
+    transition: transform 0.12s;
+  }
+  .ai-submit-btn:hover { box-shadow: 0 4px 12px rgba(160,127,60,0.30); }
+  .ai-submit-btn:active { transform: scale(0.97); }
+  .ai-submit-btn:disabled { opacity: 0.55; cursor: wait; }
+  .ai-status { font-size: 12px; color: var(--muted); margin-top: 12px; min-height: 16px; }
+  .ai-saved-label { font-size: 11px; color: var(--muted); font-weight: 500; margin-top: 16px; margin-bottom: 8px; }
+  .ai-saved-chips { display: flex; gap: 6px; flex-wrap: wrap; }
+  .ai-saved-chip {
+    display: inline-flex; align-items: center; gap: 4px;
+    background: white; border: 1px solid var(--border);
+    border-radius: 6px; font-size: 12px;
+    color: var(--ink-soft); font-weight: 500;
+    overflow: hidden;
+  }
+  .ai-saved-chip .label { padding: 6px 4px 6px 11px; cursor: pointer; }
+  .ai-saved-chip .label:hover { color: var(--gold-deep); }
+  .ai-saved-chip .remove { padding: 6px 8px; color: var(--muted-soft); cursor: pointer; display: flex; align-items: center; }
+  .ai-saved-chip .remove:hover { color: var(--restaurant); }
+  .ai-saved-chip .remove svg { width: 12px; height: 12px; }
+  .ai-reason {
+    font-size: 12px; color: var(--gold-deep); margin-top: 6px;
+    padding: 6px 10px; background: rgba(201,163,93,0.10);
+    border-left: 2px solid var(--gold-accent); border-radius: 4px;
+  }
   .discover-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }
   .discover-title { font-size: 14px; font-weight: 600; color: var(--ink); letter-spacing: -0.005em; }
   .discover-desc { font-size: 12px; color: var(--muted); font-weight: 400; }
@@ -750,6 +795,9 @@
     <symbol id="i-external" viewBox="0 0 24 24"><path d="M15 3h6v6M10 14 21 3M21 14v7H3V3h7"/></symbol>
     <symbol id="i-heart" viewBox="0 0 24 24"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.29 1.51 4.04 3 5.5l7 7Z"/></symbol>
     <symbol id="i-heart-filled" viewBox="0 0 24 24"><path fill="currentColor" stroke="currentColor" d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.29 1.51 4.04 3 5.5l7 7Z"/></symbol>
+    <symbol id="i-sparkles" viewBox="0 0 24 24"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"/></symbol>
+    <symbol id="i-star" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></symbol>
+    <symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol>
   </defs>
 </svg>
 
@@ -861,6 +909,29 @@
     </span>
     <svg class="icon icon-sm discover-arrow"><use href="#i-arrow-right"/></svg>
   </button>
+
+  <!-- Discover row: Curadora IA -->
+  <button class="discover-cta discover-cta-ai" id="aiBtn" type="button">
+    <svg class="icon icon-lg discover-icon"><use href="#i-sparkles"/></svg>
+    <span class="discover-text">
+      <span class="discover-title">Curadora IA</span>
+      <span class="discover-desc">Descreva o que procura, ela acha as lojas</span>
+    </span>
+    <svg class="icon icon-sm discover-arrow"><use href="#i-arrow-right"/></svg>
+  </button>
+
+  <!-- AI search panel (expansivel) -->
+  <div class="card ai-panel" id="aiPanel" style="display:none">
+    <button class="back-mini" id="aiClose" type="button"><svg class="icon icon-sm"><use href="#i-x"/></svg> Fechar</button>
+    <div class="reference-step-title small">Descreva o gosto da cliente</div>
+    <textarea id="aiInput" placeholder="Ex: lojas vintage que pareçam museu; perfumarias minimalistas vibe nórdica; flagships de luxo com arquitetura icônica..." rows="3"></textarea>
+    <button class="ai-submit-btn" id="aiSubmit" type="button">
+      <svg class="icon icon-sm"><use href="#i-sparkles"/></svg>
+      Buscar com IA
+    </button>
+    <div id="aiStatus" class="ai-status"></div>
+    <div id="aiSaved" class="ai-saved"></div>
+  </div>
 
   <!-- Filters card -->
   <div class="card" id="filtersCard">
@@ -1330,7 +1401,7 @@ function clearMarkers() {
   if (radiusCircle) { map.removeLayer(radiusCircle); radiusCircle = null; }
   if (activeCenterMarker) { map.removeLayer(activeCenterMarker); activeCenterMarker = null; }
 }
-function colorFor(type) { if (type === "hotel") return "#6b4423"; if (type === "cafe") return "#2e7d5b"; if (type === "restaurant") return "#9c2a3a"; if (type === "shop") return "#d6336c"; return "#b85c38"; }
+function colorFor(type) { if (type === "hotel") return "#6b4423"; if (type === "cafe") return "#2e7d5b"; if (type === "restaurant") return "#9c2a3a"; if (type === "shop") return "#d6336c"; if (type === "ai") return "#c9a35d"; return "#b85c38"; }
 
 const CUISINE_PT = {
   italian: "Italiana", pizza: "Pizza", japanese: "Japonesa", sushi: "Sushi", ramen: "Ramen",
@@ -1984,7 +2055,9 @@ function renderPlaceCard(container, r, idx) {
     const vibeMap = { luxury: 'Luxo', concept: 'Concept', iconic: 'Icônica', minimal: 'Minimalista', vintage: 'Vintage', historic: 'Histórica', indie: 'Indie', playful: 'Lúdica', modernist: 'Modernista', classic: 'Clássica' };
     vibeBadge = `<span class="badge vibe">${vibeMap[r.vibe] || r.vibe}</span>`;
   }
-  const descHtml = (r.curated && r.curated.desc) ? `<div class="place-desc">"${r.curated.desc}"</div>` : (r.desc ? `<div class="place-desc">"${r.desc}"</div>` : '');
+  const baseDesc = (r.curated && r.curated.desc) ? `<div class="place-desc">"${r.curated.desc}"</div>` : (r.desc ? `<div class="place-desc">"${r.desc}"</div>` : '');
+  const aiReasonHtml = r._aiReason ? `<div class="ai-reason">✨ ${r._aiReason}</div>` : '';
+  const descHtml = baseDesc + aiReasonHtml;
   const addrText = r.address || (r.curated ? r.curated.addr : '');
   const areaText = (r.type === "hotel" && r.curated) ? ` · ${r.curated.area}` : ((r.type === "shop" && r.curated && r.curated.area) ? ` · ${r.curated.area}` : '');
   const addrHtml = addrText ? `<div class="place-meta">${addrText}${areaText}</div>` : '';
@@ -2120,7 +2193,9 @@ function renderResults() {
     else if (r.type === "bakery") label = "B";
     else if (r.type === "restaurant") label = "R";
     else if (r.type === "shop") label = "L";
-    const icon = makeIcon(r.type, label, !!r.curated);
+    let iconType = r.type;
+    if (r._aiMatched) { label = "★"; iconType = "ai"; }
+    const icon = makeIcon(iconType, label, !!r.curated);
     const m = L.marker(r.coords, { icon }).addTo(map);
     let popupHtml = `<div class="popup-title">${r.name}</div>`;
     popupHtml += `<div class="popup-row"><strong>${r.type === 'cafe' ? 'Café' : r.type === 'bakery' ? 'Bakery' : r.type === 'restaurant' ? 'Restaurante' : 'Hotel'}</strong> · ${fmtKm(r.distance)} (${walkMin(r.distance)} min)</div>`;
@@ -2492,6 +2567,153 @@ function runFavorites() {
 }
 favBtn.addEventListener('click', runFavorites);
 updateFavCountLabel();
+
+// ===================== Curadora IA =====================
+const AI_SEARCHES_KEY = 'nyccoffee_ai_searches_v1';
+let savedAISearches = [];
+try { savedAISearches = JSON.parse(localStorage.getItem(AI_SEARCHES_KEY) || '[]'); } catch(e) {}
+function saveAISearches() { try { localStorage.setItem(AI_SEARCHES_KEY, JSON.stringify(savedAISearches)); } catch(e) {} }
+
+const aiBtn = document.getElementById('aiBtn');
+const aiPanel = document.getElementById('aiPanel');
+const aiInput = document.getElementById('aiInput');
+const aiSubmit = document.getElementById('aiSubmit');
+const aiStatus = document.getElementById('aiStatus');
+const aiSaved = document.getElementById('aiSaved');
+const aiClose = document.getElementById('aiClose');
+
+function renderAISavedList() {
+  if (!savedAISearches.length) { aiSaved.innerHTML = ''; return; }
+  const chips = savedAISearches.map(s =>
+    `<span class="ai-saved-chip" data-id="${s.id}"><span class="label" data-load="${s.id}">${(s.name||'').replace(/</g,'&lt;')}</span><span class="remove" data-remove="${s.id}"><svg class="icon"><use href="#i-x"/></svg></span></span>`
+  ).join('');
+  aiSaved.innerHTML = `<div class="ai-saved-label">Buscas salvas (${savedAISearches.length})</div><div class="ai-saved-chips">${chips}</div>`;
+  aiSaved.querySelectorAll('[data-load]').forEach(el => {
+    el.addEventListener('click', () => {
+      const id = el.dataset.load;
+      const s = savedAISearches.find(x => x.id === id);
+      if (s) runAISearchFromResults({ description: s.description, matches: s.matches, note: s.note, name: s.name });
+    });
+  });
+  aiSaved.querySelectorAll('[data-remove]').forEach(el => {
+    el.addEventListener('click', (e) => {
+      e.stopPropagation();
+      savedAISearches = savedAISearches.filter(x => x.id !== el.dataset.remove);
+      saveAISearches();
+      renderAISavedList();
+    });
+  });
+}
+
+aiBtn.addEventListener('click', () => {
+  const visible = aiPanel.style.display !== 'none';
+  aiPanel.style.display = visible ? 'none' : '';
+  if (!visible) {
+    renderAISavedList();
+    setTimeout(() => {
+      aiPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      aiInput.focus();
+    }, 100);
+  }
+});
+aiClose.addEventListener('click', () => { aiPanel.style.display = 'none'; });
+
+aiSubmit.addEventListener('click', async () => {
+  const description = aiInput.value.trim();
+  if (!description) { aiInput.focus(); return; }
+  aiSubmit.disabled = true;
+  aiStatus.textContent = '🤖 Curadora pensando...';
+  const shopsPayload = curatedPlaces.filter(p => p.type === 'shop').map(p => ({
+    name: p.name, type: 'shop', vibe: p.vibe, area: p.area, desc: p.desc
+  }));
+  try {
+    const res = await fetch('/api/search-shops', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ description, shops: shopsPayload })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+    const matchCount = (data.matches || []).length;
+    aiStatus.textContent = `✓ ${matchCount} ${matchCount === 1 ? 'match' : 'matches'}`;
+    runAISearchFromResults({ description, matches: data.matches || [], note: data.note });
+    // Pergunta se quer salvar — delayed pra usuario ver os resultados primeiro
+    setTimeout(() => {
+      const name = prompt(`Salvar essa busca pra reusar depois?\nDigite um nome curto (ou Cancelar pra pular):`);
+      if (name && name.trim()) {
+        const newSearch = {
+          id: 'ai_' + Date.now(),
+          name: name.trim().slice(0, 40),
+          description,
+          matches: data.matches,
+          note: data.note,
+          createdAt: new Date().toISOString()
+        };
+        savedAISearches.unshift(newSearch);
+        if (savedAISearches.length > 20) savedAISearches = savedAISearches.slice(0, 20);
+        saveAISearches();
+        renderAISavedList();
+      }
+    }, 1200);
+  } catch (e) {
+    aiStatus.textContent = `❌ ${e.message}`;
+  } finally {
+    aiSubmit.disabled = false;
+  }
+});
+
+function runAISearchFromResults({ description, matches, note, name }) {
+  clearMarkers();
+  clearRoute();
+  errorBox.innerHTML = '';
+  focusedItem = null;
+  setTimeout(() => map.invalidateSize(), 50);
+
+  const matchNames = new Set((matches || []).map(m => m.name));
+  const matchReasons = new Map((matches || []).map(m => [m.name, m.why || '']));
+  const items = curatedPlaces.filter(p => matchNames.has(p.name));
+
+  const center = userLocation || [40.732, -73.997];
+  currentResults = items.map(p => ({
+    ...p,
+    distance: dist(center, p.coords),
+    curated: p,
+    rating: p.rating,
+    _aiMatched: true,
+    _aiReason: matchReasons.get(p.name) || ''
+  }));
+  // Ordena pela ordem que a IA retornou (relevance) — match index do matches array
+  const order = new Map((matches || []).map((m, i) => [m.name, i]));
+  currentResults.sort((a, b) => (order.get(a.name) ?? 999) - (order.get(b.name) ?? 999));
+
+  currentCenter = { name: name ? `IA: ${name}` : 'Curadora IA', coords: center };
+  centerType = null;
+  activeFilters = new Set(ALL_TYPES);
+
+  const subEl = document.getElementById('modeSubtitle');
+  const subText = description.length > 70 ? description.slice(0, 70) + '…' : description;
+  if (subEl) { subEl.classList.remove('route'); subEl.innerHTML = ''; subEl.textContent = subText; }
+  document.getElementById('modeTitle').textContent = name ? `IA: ${name}` : 'Curadora IA';
+  document.getElementById('modeHeaderIcon').textContent = '✨';
+  if (presetsBlock) presetsBlock.style.display = 'none';
+  setReferenceUIState('set', { iconId: 'i-sparkles', name: name ? `IA: ${name}` : 'Curadora IA' });
+  aiPanel.style.display = 'none';
+
+  updateFilterButtons();
+  // Para AI mantemos a ordem da curadora — usa 'rating' como fallback se sort mudar
+  currentSort = 'rating';
+  renderResults();
+
+  if (currentResults.length) {
+    const bounds = L.latLngBounds(currentResults.map(r => r.coords));
+    if (userLocation) { bounds.extend(userLocation); showUserMarker(userLocation); }
+    map.fitBounds(bounds, { padding: [40, 40] });
+  } else {
+    panel.innerHTML = `<div class="empty-state"><div class="icon">🤔</div><p>Nenhum match.<br>${note || 'Tente uma descrição diferente.'}</p></div>`;
+  }
+}
+
+renderAISavedList();
 
 // ===================== Map expand/collapse toggle =====================
 const mapEl = document.getElementById('map');
