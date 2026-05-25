@@ -344,6 +344,8 @@
   }
   .discover-cta:hover { border-color: var(--ink-soft); background: #fbfcfb; }
   .discover-cta .discover-icon { color: var(--gold-deep); flex-shrink: 0; }
+  .discover-cta-fav { border-left-color: #d6336c; }
+  .discover-cta-fav .discover-icon { color: #d6336c; }
   .discover-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }
   .discover-title { font-size: 14px; font-weight: 600; color: var(--ink); letter-spacing: -0.005em; }
   .discover-desc { font-size: 12px; color: var(--muted); font-weight: 400; }
@@ -479,6 +481,21 @@
     box-shadow: var(--shadow-1);
     transition: box-shadow 0.2s, transform 0.15s, border-color 0.18s;
   }
+  .fav-btn {
+    position: absolute; top: 12px; right: 12px;
+    width: 34px; height: 34px; border-radius: 999px;
+    background: rgba(255,255,255,0.92);
+    border: 1px solid var(--border);
+    color: var(--muted-soft);
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    z-index: 5;
+    transition: color 0.15s, transform 0.12s, border-color 0.15s;
+  }
+  .fav-btn:hover { color: #d6336c; border-color: #d6336c; }
+  .fav-btn:active { transform: scale(0.9); }
+  .fav-btn.active { color: #d6336c; border-color: #d6336c; background: #fef0f5; }
+  .fav-btn .icon { width: 16px; height: 16px; stroke-width: 1.8; }
   .place-card::before {
     content: ""; position: absolute; left: 0; top: 14px; bottom: 14px;
     width: 3px; border-radius: 2px;
@@ -731,6 +748,8 @@
     <symbol id="i-shop" viewBox="0 0 24 24"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></symbol>
     <symbol id="i-instagram" viewBox="0 0 24 24"><rect width="20" height="20" x="2" y="2" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" x2="17.51" y1="6.5" y2="6.5"/></symbol>
     <symbol id="i-external" viewBox="0 0 24 24"><path d="M15 3h6v6M10 14 21 3M21 14v7H3V3h7"/></symbol>
+    <symbol id="i-heart" viewBox="0 0 24 24"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.29 1.51 4.04 3 5.5l7 7Z"/></symbol>
+    <symbol id="i-heart-filled" viewBox="0 0 24 24"><path fill="currentColor" stroke="currentColor" d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.29 1.51 4.04 3 5.5l7 7Z"/></symbol>
   </defs>
 </svg>
 
@@ -829,6 +848,16 @@
     <span class="discover-text">
       <span class="discover-title">Top NYC</span>
       <span class="discover-desc">Os melhores cafés e padarias da cidade</span>
+    </span>
+    <svg class="icon icon-sm discover-arrow"><use href="#i-arrow-right"/></svg>
+  </button>
+
+  <!-- Discover row: Meus Favoritos -->
+  <button class="discover-cta discover-cta-fav" id="favBtn" type="button">
+    <svg class="icon icon-lg discover-icon"><use href="#i-heart"/></svg>
+    <span class="discover-text">
+      <span class="discover-title">Meus favoritos</span>
+      <span class="discover-desc" id="favCountLabel">Toque no coração em qualquer card pra salvar</span>
     </span>
     <svg class="icon icon-sm discover-arrow"><use href="#i-arrow-right"/></svg>
   </button>
@@ -1379,6 +1408,50 @@ const SHOP_DOMAINS = {
   "Eataly Flatiron": "eataly.com", "Eataly Downtown": "eataly.com",
   "Murray's Cheese Shop": "murrayscheese.com"
 };
+
+// ===================== Favoritos =====================
+const FAV_KEY = 'nyccoffee_favorites_v1';
+let favorites = new Set();
+try { favorites = new Set(JSON.parse(localStorage.getItem(FAV_KEY) || '[]')); } catch (e) {}
+function saveFavorites() {
+  try { localStorage.setItem(FAV_KEY, JSON.stringify([...favorites])); } catch (e) {}
+}
+function isFav(name) { return favorites.has(name); }
+function toggleFav(name) {
+  if (favorites.has(name)) favorites.delete(name);
+  else favorites.add(name);
+  saveFavorites();
+  updateFavCountLabel();
+}
+function updateFavCountLabel() {
+  const el = document.getElementById('favCountLabel');
+  if (!el) return;
+  el.textContent = favorites.size === 0
+    ? 'Toque no coração em qualquer card pra salvar'
+    : `${favorites.size} ${favorites.size === 1 ? 'lugar salvo' : 'lugares salvos'} · toque pra ver no mapa`;
+}
+
+// ===================== Instagram photo via Microlink (com cache localStorage) =====================
+const IG_CACHE_KEY = 'nyccoffee_ig_v1';
+let igCache = {};
+try { igCache = JSON.parse(localStorage.getItem(IG_CACHE_KEY) || '{}'); } catch (e) {}
+function saveIGCache() { try { localStorage.setItem(IG_CACHE_KEY, JSON.stringify(igCache)); } catch (e) {} }
+async function getIGPhoto(handle) {
+  if (handle in igCache) return igCache[handle];
+  try {
+    const res = await fetch(`https://api.microlink.io/?url=https://instagram.com/${encodeURIComponent(handle)}&meta=true`);
+    if (!res.ok) { igCache[handle] = null; saveIGCache(); return null; }
+    const data = await res.json();
+    let url = data?.data?.image?.url || null;
+    // IG bloqueia preview de perfil sem login: descarta retornos genericos (logo IG)
+    if (url && /\/rsrc\.php\/|\/static\.cdninstagram\.com\/rsrc/.test(url)) url = null;
+    igCache[handle] = url;
+    saveIGCache();
+    return url;
+  } catch (e) {
+    return null;
+  }
+}
 
 async function getWikiPhoto(pageTitle) {
   if (pageTitle in wikiCache) return wikiCache[pageTitle]; // pode ser null se falhou antes
@@ -1936,7 +2009,23 @@ function renderPlaceCard(container, r, idx) {
   const instagramLink = r.instagram ? `<a class="place-instagram" href="https://instagram.com/${r.instagram}" target="_blank"><svg class="icon"><use href="#i-instagram"/></svg>@${r.instagram}</a>` : '';
   const googleLink = `<a href="https://www.google.com/search?q=${encodeURIComponent(r.name + ' New York')}" target="_blank">Google</a>`;
   const dirLink = `<a href="https://www.google.com/maps/dir/${currentCenter.coords[0]},${currentCenter.coords[1]}/${r.coords[0]},${r.coords[1]}" target="_blank">Direções</a>`;
-  card.innerHTML = `${heroHtml}<div class="place-name">${idx}. ${r.name}</div>${addrHtml}<div class="badge-row">${typeBadge}${cuisineBadge}${vibeBadge}${ratingBadge}${priceBadge}${distBadge}</div>${descHtml}<div class="place-links">${instagramLink}${bookingLink}${googleLink}${dirLink}</div>`;
+  const favClass = isFav(r.name) ? 'fav-btn active' : 'fav-btn';
+  const heartIcon = isFav(r.name) ? 'i-heart-filled' : 'i-heart';
+  const favBtnHtml = `<button class="${favClass}" data-fav-name="${(r.name||'').replace(/"/g,'&quot;')}" title="Favoritar"><svg class="icon"><use href="#${heartIcon}"/></svg></button>`;
+  card.innerHTML = `${heroHtml}${favBtnHtml}<div class="place-name">${idx}. ${r.name}</div>${addrHtml}<div class="badge-row">${typeBadge}${cuisineBadge}${vibeBadge}${ratingBadge}${priceBadge}${distBadge}</div>${descHtml}<div class="place-links">${instagramLink}${bookingLink}${googleLink}${dirLink}</div>`;
+  // Wire fav button (stopPropagation pra nao disparar focus do card)
+  const favEl = card.querySelector('.fav-btn');
+  if (favEl) {
+    favEl.addEventListener('click', (e) => {
+      e.stopPropagation();
+      toggleFav(r.name);
+      // Re-render in-place visual state do botao
+      const nowFav = isFav(r.name);
+      favEl.classList.toggle('active', nowFav);
+      const use = favEl.querySelector('use');
+      if (use) use.setAttribute('href', '#' + (nowFav ? 'i-heart-filled' : 'i-heart'));
+    });
+  }
   card.addEventListener('click', (e) => {
     if (e.target.tagName === 'A' || e.target.tagName === 'BUTTON') return;
     focusOnPlace(r);
@@ -1995,6 +2084,21 @@ function focusOnPlace(r) {
   if (marker) marker.openPopup();
   if (routeOrigin) drawRoute(routeOrigin, r.coords, r.name, originName);
   renderResults();
+  // Tenta carregar foto Instagram via Microlink (on-focus pra economizar rate limit)
+  if (r.type === 'shop' && r.instagram && !r.photo && !(r.wikipedia && wikiCache[r.wikipedia])) {
+    getIGPhoto(r.instagram).then(url => {
+      if (!url) return;
+      document.querySelectorAll(`[data-shop-monogram="${CSS.escape(r.name)}"]`).forEach(el => {
+        const img = document.createElement('img');
+        img.className = 'place-photo';
+        img.src = url;
+        img.alt = r.name;
+        img.loading = 'lazy';
+        img.onerror = function() { this.style.display = 'none'; };
+        el.replaceWith(img);
+      });
+    });
+  }
   setTimeout(() => {
     const mapCard = document.getElementById('mapCard');
     const main = document.getElementById('mainContent');
@@ -2365,6 +2469,56 @@ function runTopRanking() {
   }
 }
 topBtn.addEventListener('click', runTopRanking);
+
+// ===================== Favoritos: modo dedicado =====================
+const favBtn = document.getElementById('favBtn');
+function runFavorites() {
+  if (favorites.size === 0) {
+    alert("Você ainda não favoritou nenhum lugar.\nToque no coração em qualquer card pra salvar.");
+    return;
+  }
+  clearMarkers();
+  clearRoute();
+  errorBox.innerHTML = '';
+  focusedItem = null;
+  setTimeout(() => map.invalidateSize(), 50);
+
+  const allCurated = [
+    ...curatedHotels.map(h => ({...h, type:'hotel', rating: h.booking})),
+    ...curatedPlaces
+  ];
+  const favItems = allCurated.filter(p => favorites.has(p.name));
+  const center = userLocation || [40.732, -73.997];
+
+  currentResults = favItems.map(p => ({
+    ...p,
+    distance: dist(center, p.coords),
+    curated: p,
+    rating: p.type === 'hotel' ? (p.booking || p.rating) : p.rating
+  }));
+  currentCenter = { name: 'Meus favoritos', coords: center };
+  centerType = null;
+  activeFilters = new Set(ALL_TYPES);
+
+  const subEl = document.getElementById('modeSubtitle');
+  if (subEl) { subEl.classList.remove('route'); subEl.innerHTML = ''; subEl.textContent = `${favorites.size} ${favorites.size === 1 ? 'lugar' : 'lugares'}`; }
+  document.getElementById('modeTitle').textContent = 'Favoritos';
+  document.getElementById('modeHeaderIcon').textContent = '❤';
+  if (presetsBlock) presetsBlock.style.display = 'none';
+  setReferenceUIState('set', { iconId: 'i-heart-filled', name: `Meus favoritos (${favorites.size})` });
+
+  updateFilterButtons();
+  currentSort = 'rating';
+  renderResults();
+
+  if (currentResults.length) {
+    const bounds = L.latLngBounds(currentResults.map(r => r.coords));
+    if (userLocation) { bounds.extend(userLocation); showUserMarker(userLocation); }
+    map.fitBounds(bounds, { padding: [40, 40] });
+  }
+}
+favBtn.addEventListener('click', runFavorites);
+updateFavCountLabel();
 
 // ===================== Map expand/collapse toggle =====================
 const mapEl = document.getElementById('map');
