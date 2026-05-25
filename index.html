@@ -76,19 +76,20 @@
     touch-action: manipulation;
   }
   body {
-    background:
-      radial-gradient(at 0% 0%, rgba(149,213,178,0.18) 0%, transparent 45%),
-      radial-gradient(at 100% 100%, rgba(201,163,93,0.10) 0%, transparent 50%),
-      var(--purple-bg);
-    background-attachment: fixed;
+    background: #f7f8f7;
     font-family: var(--font-sans);
     color: var(--ink);
     line-height: 1.45;
     font-size: 14px;
-    font-feature-settings: "ss01", "cv11", "tnum";
+    font-feature-settings: "cv11", "tnum";
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
+  /* Icon system: SVG inline com currentColor */
+  .icon { width: 20px; height: 20px; stroke-width: 1.6; stroke: currentColor; fill: none; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0; }
+  .icon-sm { width: 16px; height: 16px; }
+  .icon-lg { width: 22px; height: 22px; }
+  .icon-xl { width: 28px; height: 28px; stroke-width: 1.4; }
   /* prevent double-tap zoom in iOS */
   button, .nav-item, .preset-chip, .quick-btn, .map-toggle-btn, .place-card, .ac-item, .tab {
     touch-action: manipulation;
@@ -99,53 +100,52 @@
   .topbar {
     position: fixed; top: 0; left: 0; right: 0;
     height: calc(var(--topbar-h) + env(safe-area-inset-top));
-    background: linear-gradient(180deg, #0d2c20 0%, #1b4332 100%);
+    background: var(--green-dark);
     color: white;
-    padding: env(safe-area-inset-top) 16px 0 16px;
+    padding: env(safe-area-inset-top) 18px 0 18px;
     display: flex; align-items: center; justify-content: space-between;
     z-index: 100;
-    box-shadow: 0 1px 0 rgba(201,163,93,0.45), 0 6px 20px rgba(8,20,15,0.35);
+    border-bottom: 1px solid rgba(255,255,255,0.06);
   }
-  .topbar-left { display: flex; align-items: center; gap: 12px; min-width: 0; flex: 1; }
-  .topbar-icon-wrap {
-    width: 40px; height: 40px; border-radius: 12px;
-    background: linear-gradient(135deg, rgba(255,255,255,0.16), rgba(255,255,255,0.06));
-    border: 1px solid rgba(201,163,93,0.32);
-    display: flex; align-items: center; justify-content: center;
-    font-size: 19px; flex-shrink: 0;
-    box-shadow: inset 0 1px 0 rgba(255,255,255,0.14);
+  .topbar-left { display: flex; align-items: center; gap: 10px; min-width: 0; flex: 1; }
+  .topbar-mono {
+    font-family: var(--font-display);
+    font-size: 22px; font-weight: 700;
+    letter-spacing: -0.04em;
+    color: var(--gold-accent);
+    flex-shrink: 0;
+    width: 26px; text-align: center;
   }
   .topbar-titles { display: flex; flex-direction: column; line-height: 1.15; min-width: 0; }
   .topbar-title {
     font-family: var(--font-display);
-    font-size: 18px; font-weight: 600; letter-spacing: -0.01em;
+    font-size: 16px; font-weight: 600; letter-spacing: -0.01em;
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
   .topbar-sub {
-    font-size: 10px; opacity: 0.78; letter-spacing: 0.06em; text-transform: uppercase;
-    margin-top: 2px;
+    font-size: 10px; opacity: 0.6; letter-spacing: 0.04em;
+    margin-top: 1px; font-weight: 500;
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
-  .topbar-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+  .topbar-right { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
   .version-pill {
-    background: rgba(201,163,93,0.18); color: rgba(255,255,255,0.92);
-    border: 1px solid rgba(201,163,93,0.32);
-    font-size: 10px; padding: 4px 9px; border-radius: 999px;
-    font-weight: 600; letter-spacing: 0.03em;
+    background: transparent; color: rgba(255,255,255,0.55);
+    font-size: 10px; padding: 2px 0; border-radius: 0;
+    font-weight: 500; letter-spacing: 0.02em;
     font-variant-numeric: tabular-nums;
   }
   .topbar-btn {
-    width: 36px; height: 36px; border-radius: 50%;
-    background: rgba(255,255,255,0.10);
-    border: 1px solid rgba(255,255,255,0.14);
+    width: 32px; height: 32px; border-radius: 8px;
+    background: transparent;
+    border: 1px solid rgba(255,255,255,0.12);
     cursor: pointer;
-    color: white; font-size: 15px;
+    color: rgba(255,255,255,0.85); font-size: 13px;
     display: none; align-items: center; justify-content: center;
-    transition: background 0.18s, transform 0.12s;
+    transition: background 0.15s;
   }
   .topbar-btn.show { display: flex; }
-  .topbar-btn:hover { background: rgba(255,255,255,0.20); }
-  .topbar-btn:active { transform: scale(0.94); }
+  .topbar-btn:hover { background: rgba(255,255,255,0.06); color: white; }
+  .topbar-btn .icon { width: 14px; height: 14px; }
 
   /* ============ MAIN SCROLLABLE ============ */
   .main-content {
@@ -160,82 +160,62 @@
 
   /* ============ CARDS ============ */
   .card {
-    background: var(--card); border-radius: 18px;
-    padding: 18px; margin-bottom: 14px;
-    box-shadow: var(--shadow-1);
-    border: 1px solid var(--border-soft);
+    background: var(--card); border-radius: 12px;
+    padding: 18px; margin-bottom: 12px;
+    border: 1px solid var(--border);
   }
   .card-title {
-    font-size: 12px; font-weight: 700; color: var(--ink);
-    display: flex; align-items: center; gap: 10px;
-    letter-spacing: 0.04em; text-transform: uppercase;
+    font-size: 13px; font-weight: 600; color: var(--ink);
+    display: flex; align-items: center; gap: 8px;
+    letter-spacing: -0.005em;
   }
   .card-icon {
-    width: 28px; height: 28px; border-radius: 9px;
-    background: linear-gradient(135deg, var(--purple-light), #d4e7dc);
-    color: var(--purple);
+    width: 24px; height: 24px;
+    color: var(--ink-soft);
     display: flex; align-items: center; justify-content: center;
-    font-size: 13px;
-    border: 1px solid rgba(27,67,50,0.10);
+    flex-shrink: 0;
   }
+  .card-icon .icon { width: 18px; height: 18px; }
 
   /* Mode header */
   .mode-header {
-    display: flex; align-items: center; gap: 14px;
-    margin-bottom: 18px; padding: 4px 4px;
+    display: flex; align-items: baseline; gap: 10px;
+    margin-bottom: 18px; padding: 4px 2px;
   }
-  .mode-header-icon {
-    width: 52px; height: 52px; border-radius: 14px;
-    background: linear-gradient(135deg, #e7f1ea, #cde2d4);
-    color: var(--purple);
-    display: flex; align-items: center; justify-content: center;
-    font-size: 24px; flex-shrink: 0;
-    border: 1px solid rgba(27,67,50,0.08);
-    box-shadow: var(--shadow-1);
-  }
-  .mode-header-text { min-width: 0; }
+  .mode-header-icon { display: none; }
+  .mode-header-text { min-width: 0; flex: 1; }
   .mode-header-text h2 {
     font-family: var(--font-display);
-    font-size: 22px; font-weight: 600; color: var(--ink);
-    line-height: 1.1; letter-spacing: -0.015em;
+    font-size: 26px; font-weight: 500; color: var(--ink);
+    line-height: 1.1; letter-spacing: -0.02em;
   }
   .mode-subtitle {
-    font-size: 11px; color: var(--muted); margin-top: 4px;
-    letter-spacing: 0.04em; text-transform: uppercase; font-weight: 600;
+    font-size: 13px; color: var(--muted); margin-top: 4px;
+    font-weight: 400;
   }
   .mode-subtitle.route {
-    text-transform: none; letter-spacing: 0;
-    font-size: 13px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
-    color: var(--ink-soft);
+    font-size: 13px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+    color: var(--muted);
   }
-  .mode-subtitle .route-from {
-    background: var(--green-bg); color: var(--purple); font-weight: 700;
-    padding: 2px 8px; border-radius: 6px;
-    border: 1px solid var(--border);
-  }
-  .mode-subtitle .route-arrow {
-    color: var(--gold-deep); font-weight: 800; font-size: 14px;
-  }
-  .mode-subtitle .route-to {
-    background: linear-gradient(135deg, #e7dac3, #c9a35d); color: white; font-weight: 700;
-    padding: 2px 8px; border-radius: 6px;
-    box-shadow: var(--shadow-1);
-  }
+  .mode-subtitle .route-from { color: var(--ink-soft); font-weight: 500; }
+  .mode-subtitle .route-arrow { color: var(--muted); font-weight: 400; }
+  .mode-subtitle .route-to { color: var(--ink); font-weight: 600; }
 
   /* Search */
   .search-input-wrap {
     display: flex; gap: 8px; position: relative;
-    background: var(--green-bg); border: 1px solid var(--border-soft);
-    border-radius: 14px;
-    padding: 6px 8px 6px 14px;
+    background: white; border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 5px 6px 5px 12px;
     align-items: center;
-    transition: border-color 0.2s, box-shadow 0.2s;
+    transition: border-color 0.15s, box-shadow 0.15s;
   }
   .search-input-wrap:focus-within {
-    border-color: var(--green-mid);
-    box-shadow: 0 0 0 4px rgba(45,106,79,0.10);
+    border-color: var(--ink);
+    box-shadow: 0 0 0 3px rgba(14,31,23,0.06);
   }
   .search-icon { font-size: 14px; color: var(--muted); flex-shrink: 0; }
+  .search-icon-svg { color: var(--muted); flex-shrink: 0; }
   .search-input {
     flex: 1; min-width: 0;
     background: transparent; border: none; outline: none;
@@ -245,17 +225,15 @@
   }
   .search-input::placeholder { color: var(--muted-soft); font-size: 14px; font-weight: 400; }
   .search-btn {
-    background: linear-gradient(180deg, #2d6a4f 0%, #1b4332 100%);
+    background: var(--ink);
     color: white;
-    border: none; border-radius: 11px;
-    padding: 10px 16px; font-weight: 700; font-size: 13px;
-    letter-spacing: 0.02em;
+    border: none; border-radius: 8px;
+    padding: 10px 16px; font-weight: 600; font-size: 13px;
     cursor: pointer; flex-shrink: 0;
-    box-shadow: inset 0 1px 0 rgba(255,255,255,0.12), 0 1px 2px rgba(8,28,21,0.20);
-    transition: transform 0.12s, box-shadow 0.18s;
+    transition: background 0.15s;
   }
-  .search-btn:hover { box-shadow: inset 0 1px 0 rgba(255,255,255,0.16), 0 4px 12px rgba(27,67,50,0.30); }
-  .search-btn:active { transform: scale(0.96); }
+  .search-btn:hover { background: var(--purple); }
+  .search-btn:active { transform: scale(0.97); }
   .search-btn:disabled { opacity: 0.6; }
   .autocomplete {
     position: absolute; top: calc(100% + 6px); left: 0; right: 0;
@@ -280,101 +258,96 @@
     margin-left: 6px; font-weight: 700; letter-spacing: 0.04em;
   }
 
-  /* Reference picker */
-  .reference-step-label {
-    font-size: 10px; color: var(--gold-deep); font-weight: 700;
-    letter-spacing: 0.10em; text-transform: uppercase; margin-bottom: 6px;
-  }
+  /* Reference picker — minimalista, sem badges/passos coloridos */
+  .reference-step-label { display: none; }
   .reference-step-title {
     font-family: var(--font-display);
-    font-size: 18px; font-weight: 600; color: var(--ink);
-    letter-spacing: -0.01em; margin-bottom: 16px;
+    font-size: 17px; font-weight: 500; color: var(--ink);
+    letter-spacing: -0.01em; margin-bottom: 14px;
   }
-  .reference-step-title.small { font-size: 15px; margin-bottom: 10px; }
+  .reference-step-title.small { font-size: 14px; margin-bottom: 10px; font-weight: 500; }
   .reference-options {
-    display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+    display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
   }
   .ref-opt {
-    display: flex; flex-direction: column; align-items: flex-start; gap: 4px;
+    display: flex; flex-direction: column; align-items: flex-start; gap: 8px;
     padding: 16px 14px;
-    background: linear-gradient(180deg, white, #f6faf7);
+    background: white;
     border: 1px solid var(--border);
-    border-radius: 14px;
+    border-radius: 10px;
     cursor: pointer; text-align: left;
-    box-shadow: var(--shadow-1);
-    transition: transform 0.12s, box-shadow 0.18s, border-color 0.18s, background 0.2s;
+    color: var(--ink);
+    transition: border-color 0.18s, background 0.15s;
   }
-  .ref-opt:hover { border-color: var(--green-mid); box-shadow: var(--shadow-2); }
-  .ref-opt:active { transform: scale(0.98); }
-  .ref-opt-icon { font-size: 26px; line-height: 1; margin-bottom: 4px; }
+  .ref-opt:hover { border-color: var(--ink-soft); background: #fbfcfb; }
+  .ref-opt:active { background: var(--green-bg); }
+  .ref-opt .icon { color: var(--ink-soft); }
   .ref-opt-title {
-    font-size: 14px; font-weight: 700; color: var(--ink);
+    font-size: 14px; font-weight: 600; color: var(--ink);
     letter-spacing: -0.005em;
   }
-  .ref-opt-desc { font-size: 11px; color: var(--muted); font-weight: 500; }
+  .ref-opt-desc { font-size: 12px; color: var(--muted); font-weight: 400; line-height: 1.35; }
 
   /* Reference SET — compact summary */
   .reference-summary {
     display: flex; align-items: center; gap: 12px;
-    padding: 4px 2px;
+    padding: 2px 0;
   }
   .reference-summary-icon {
-    width: 44px; height: 44px; border-radius: 12px; flex-shrink: 0;
-    background: linear-gradient(135deg, var(--green-light), #cde2d4);
-    color: var(--purple);
+    width: 38px; height: 38px; border-radius: 8px; flex-shrink: 0;
+    background: var(--green-bg);
+    color: var(--ink-soft);
     display: flex; align-items: center; justify-content: center;
-    font-size: 22px;
-    border: 1px solid rgba(27,67,50,0.08);
-    box-shadow: var(--shadow-1);
+    border: 1px solid var(--border);
   }
   .reference-summary-text { flex: 1; min-width: 0; }
   .reference-summary-label {
-    font-size: 10px; color: var(--muted); font-weight: 700;
-    letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 2px;
+    font-size: 11px; color: var(--muted); font-weight: 500;
+    margin-bottom: 1px;
   }
   .reference-summary-name {
     font-family: var(--font-display);
-    font-size: 16px; font-weight: 600; color: var(--ink);
+    font-size: 16px; font-weight: 500; color: var(--ink);
     letter-spacing: -0.01em; line-height: 1.2;
     overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
   }
   .reference-change-btn {
-    background: var(--green-bg); color: var(--purple);
+    background: transparent; color: var(--ink-soft);
     border: 1px solid var(--border);
-    border-radius: 10px; padding: 7px 12px;
-    font-size: 12px; font-weight: 600; cursor: pointer; flex-shrink: 0;
+    border-radius: 8px; padding: 7px 12px;
+    font-size: 12px; font-weight: 500; cursor: pointer; flex-shrink: 0;
     transition: all 0.15s;
   }
-  .reference-change-btn:hover { background: var(--purple); color: white; border-color: var(--purple); }
-  .reference-change-btn:active { transform: scale(0.96); }
+  .reference-change-btn:hover { background: var(--ink); color: white; border-color: var(--ink); }
+  .reference-change-btn:active { transform: scale(0.97); }
 
   /* Mini back button (used inside picker) */
   .back-mini {
-    background: none; border: none; color: var(--purple);
-    font-size: 12px; font-weight: 600; cursor: pointer;
-    padding: 2px 0; margin-bottom: 10px;
+    background: none; border: none; color: var(--ink-soft);
+    font-size: 13px; font-weight: 500; cursor: pointer;
+    padding: 0; margin-bottom: 14px;
+    display: inline-flex; align-items: center; gap: 4px;
   }
-  .back-mini:hover { color: var(--gold-deep); }
+  .back-mini:hover { color: var(--ink); }
 
-  /* Discover CTA (Top NYC) */
+  /* Discover row (Top NYC) — sutil, sem gradiente forte */
   .discover-cta {
     display: flex; align-items: center; gap: 14px;
-    width: 100%; padding: 14px 16px; margin-bottom: 14px;
-    background: linear-gradient(180deg, #fbf5e7, #f3e6c8);
-    border: 1px solid var(--gold-accent);
-    border-radius: 18px;
+    width: 100%; padding: 14px 18px; margin-bottom: 14px;
+    background: white;
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--gold-accent);
+    border-radius: 10px;
     cursor: pointer; text-align: left;
-    box-shadow: var(--shadow-1);
-    transition: transform 0.12s, box-shadow 0.18s;
     font-family: var(--font-sans);
+    transition: border-color 0.15s, background 0.15s;
   }
-  .discover-cta:hover { box-shadow: var(--shadow-2); transform: translateY(-1px); }
-  .discover-cta:active { transform: scale(0.99); }
-  .discover-icon { font-size: 28px; line-height: 1; flex-shrink: 0; }
+  .discover-cta:hover { border-color: var(--ink-soft); background: #fbfcfb; }
+  .discover-cta .discover-icon { color: var(--gold-deep); flex-shrink: 0; }
   .discover-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }
-  .discover-title { font-family: var(--font-display); font-size: 16px; font-weight: 600; color: var(--ink); letter-spacing: -0.01em; }
-  .discover-desc { font-size: 11px; color: var(--gold-deep); font-weight: 600; }
-  .discover-arrow { font-size: 18px; color: var(--gold-deep); flex-shrink: 0; }
+  .discover-title { font-size: 14px; font-weight: 600; color: var(--ink); letter-spacing: -0.005em; }
+  .discover-desc { font-size: 12px; color: var(--muted); font-weight: 400; }
+  .discover-arrow { color: var(--muted); flex-shrink: 0; }
   .presets-label {
     font-size: 10px; color: var(--muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em;
     margin-top: 16px; margin-bottom: 8px;
@@ -397,16 +370,17 @@
   /* Presets */
   .preset-chips { display: flex; gap: 6px; flex-wrap: wrap; }
   .preset-chip {
-    padding: 7px 12px; background: white; border: 1px solid var(--border);
-    border-radius: 999px; font-size: 12px; cursor: pointer;
+    padding: 6px 11px; background: white; border: 1px solid var(--border);
+    border-radius: 6px; font-size: 12px; cursor: pointer;
     color: var(--ink-soft); font-weight: 500;
     transition: all 0.15s;
   }
-  .preset-chip:hover {
-    background: var(--green-bg); color: var(--purple); border-color: var(--green-mid);
-    box-shadow: var(--shadow-1);
+  .preset-chip:hover { border-color: var(--ink-soft); color: var(--ink); }
+  .preset-chip:active { background: var(--green-bg); }
+  .presets-label {
+    font-size: 11px; color: var(--muted); font-weight: 500; letter-spacing: 0;
+    margin-top: 16px; margin-bottom: 8px; text-transform: none;
   }
-  .preset-chip:active { transform: scale(0.97); }
 
   /* Filters */
   .filters-header {
@@ -527,32 +501,34 @@
   .place-meta { font-size: 12px; color: var(--muted); margin-top: 4px; font-weight: 500; }
   .badge-row { display: flex; gap: 5px; margin-top: 10px; flex-wrap: wrap; align-items: center; }
   .badge {
-    display: inline-block; padding: 3px 9px; border-radius: 999px;
-    font-size: 10.5px; font-weight: 600; letter-spacing: 0.01em;
+    display: inline-block; padding: 2px 8px; border-radius: 4px;
+    font-size: 10.5px; font-weight: 500; letter-spacing: 0;
     font-variant-numeric: tabular-nums;
+    background: var(--green-bg); color: var(--ink-soft);
+    border: 1px solid var(--border-soft);
   }
-  .badge.cafe { background: rgba(45,106,79,0.12); color: #1b4332; }
-  .badge.bakery { background: rgba(184,134,11,0.14); color: #8a610a; }
-  .badge.restaurant { background: rgba(155,34,38,0.12); color: #7f1d1d; }
-  .badge.hotel { background: var(--purple-light); color: var(--purple); }
-  .badge.distance { background: var(--green-bg); color: var(--ink-soft); border: 1px solid var(--border-soft); }
-  .badge.rating { background: rgba(245,158,11,0.14); color: #92450a; }
-  .badge.rating-high { background: rgba(16,185,129,0.14); color: #047857; }
-  .badge.rating-low { background: var(--green-bg); color: var(--muted); }
-  .badge.price { background: var(--purple-light); color: var(--purple); }
-  .badge.cuisine { background: rgba(201,163,93,0.16); color: var(--gold-deep); }
+  .badge.cafe { color: #1b4332; }
+  .badge.bakery { color: #8a610a; }
+  .badge.restaurant { color: #7f1d1d; }
+  .badge.hotel { color: var(--purple); }
+  .badge.distance { color: var(--muted); }
+  .badge.rating { color: #92450a; background: #fdf6ea; border-color: #f3e7c8; }
+  .badge.rating-high { color: #047857; background: #ecfdf5; border-color: #c8eedd; }
+  .badge.rating-low { color: var(--muted); }
+  .badge.price { color: var(--purple); }
+  .badge.cuisine { color: var(--gold-deep); background: #fdf9ef; border-color: #f0e6cd; }
   .back-link-btn {
     display: inline-flex; align-items: center; gap: 6px;
-    background: linear-gradient(180deg, #2d6a4f, #1b4332);
-    color: white;
-    border: none; border-radius: 12px;
-    padding: 10px 16px; font-size: 13px; font-weight: 700;
+    background: transparent;
+    color: var(--ink-soft);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 14px; font-size: 13px; font-weight: 500;
     cursor: pointer; margin-bottom: 14px;
-    box-shadow: inset 0 1px 0 rgba(255,255,255,0.12), 0 2px 6px rgba(8,28,21,0.15);
-    transition: transform 0.12s;
+    transition: all 0.15s;
   }
-  .back-link-btn:hover { background: linear-gradient(180deg, #38855f, #205040); }
-  .back-link-btn:active { transform: scale(0.97); }
+  .back-link-btn:hover { border-color: var(--ink-soft); color: var(--ink); }
+  .back-link-btn:active { transform: scale(0.98); }
   /* Cards de origem/destino no painel focado */
   .route-card-row {
     display: grid; grid-template-columns: 1fr 1fr;
@@ -560,31 +536,21 @@
   }
   .route-card {
     background: white; border: 1px solid var(--border);
-    border-radius: 14px; padding: 12px 13px;
-    box-shadow: var(--shadow-1);
+    border-radius: 10px; padding: 12px 13px;
     position: relative; overflow: hidden;
     min-width: 0;
   }
-  .route-card.partida {
-    background: linear-gradient(180deg, #f4f9f6, #ebf3ee);
-    border-color: var(--green-soft);
-  }
-  .route-card.chegada {
-    background: linear-gradient(180deg, #fbf5e7, #f3e6c8);
-    border-color: var(--gold-accent);
-  }
+  .route-card.partida { border-left: 3px solid var(--ink-soft); }
+  .route-card.chegada { border-left: 3px solid var(--gold-deep); }
   .route-card-label {
     display: flex; align-items: center; gap: 4px;
-    font-size: 9.5px; color: var(--muted); font-weight: 700;
-    letter-spacing: 0.08em; text-transform: uppercase;
+    font-size: 11px; color: var(--muted); font-weight: 500;
     margin-bottom: 6px;
   }
-  .route-card.partida .route-card-label { color: var(--green-mid); }
-  .route-card.chegada .route-card-label { color: var(--gold-deep); }
   .route-card-name {
     font-family: var(--font-display);
-    font-size: 14px; font-weight: 600; color: var(--ink);
-    line-height: 1.2; letter-spacing: -0.01em;
+    font-size: 14px; font-weight: 500; color: var(--ink);
+    line-height: 1.25; letter-spacing: -0.01em;
     overflow: hidden; text-overflow: ellipsis; display: -webkit-box;
     -webkit-line-clamp: 2; -webkit-box-orient: vertical;
   }
@@ -621,41 +587,28 @@
     position: fixed; bottom: 0; left: 0; right: 0;
     height: calc(var(--bottomnav-h) + env(safe-area-inset-bottom));
     padding-bottom: env(safe-area-inset-bottom);
-    background: rgba(255,255,255,0.92);
-    backdrop-filter: saturate(180%) blur(20px);
-    -webkit-backdrop-filter: saturate(180%) blur(20px);
+    background: white;
     border-top: 1px solid var(--border);
     display: flex;
     z-index: 100;
-    box-shadow: 0 -1px 0 rgba(255,255,255,0.6) inset, 0 -8px 24px rgba(10,31,23,0.06);
   }
   .nav-item {
     flex: 1; background: none; border: none; cursor: pointer; position: relative;
     display: flex; flex-direction: column; align-items: center; justify-content: center;
-    gap: 4px; color: var(--muted); font-weight: 600;
+    gap: 4px; color: var(--muted-soft); font-weight: 500;
     padding: 8px 4px;
-    opacity: 0.30;
-    filter: grayscale(0.85);
-    transition: opacity 0.2s, filter 0.2s, color 0.2s, transform 0.12s;
+    transition: color 0.15s;
   }
-  .nav-item:active { transform: scale(0.92); }
-  .nav-item.active {
-    color: var(--purple);
-    opacity: 1;
-    filter: none;
-  }
+  .nav-item.active { color: var(--ink); }
   .nav-item.active::after {
-    content: ""; position: absolute; top: 4px; left: 50%; transform: translateX(-50%);
-    width: 28px; height: 3px; border-radius: 0 0 4px 4px;
-    background: linear-gradient(90deg, var(--gold-accent), var(--green-mid));
+    content: ""; position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+    width: 24px; height: 2px;
+    background: var(--ink);
   }
-  .nav-item.disabled {
-    opacity: 0.15;
-    filter: grayscale(1);
-    cursor: not-allowed;
-  }
-  .nav-icon { font-size: 22px; line-height: 1; }
-  .nav-label { font-size: 10px; letter-spacing: 0.02em; font-weight: 600; }
+  .nav-item.disabled { opacity: 0.30; cursor: not-allowed; }
+  .nav-icon { width: 20px; height: 20px; stroke-width: 1.6; }
+  .nav-item.active .nav-icon { stroke-width: 1.8; }
+  .nav-label { font-size: 10.5px; font-weight: 500; }
 
   /* User location marker */
   .user-marker-wrap { position: relative; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; }
@@ -714,19 +667,39 @@
 </style>
 </head>
 <body>
+<!-- SVG icon defs -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-pin" viewBox="0 0 24 24"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></symbol>
+    <symbol id="i-building" viewBox="0 0 24 24"><rect x="4" y="2" width="16" height="20" rx="1.5"/><path d="M9 22v-5h6v5"/><path d="M8 6h.01M12 6h.01M16 6h.01M8 10h.01M12 10h.01M16 10h.01M8 14h.01M12 14h.01M16 14h.01"/></symbol>
+    <symbol id="i-coffee" viewBox="0 0 24 24"><path d="M10 2v2M14 2v2M6 2v2"/><path d="M17 8H3v9a4 4 0 0 0 4 4h6a4 4 0 0 0 4-4Z"/><path d="M17 8h1a3 3 0 0 1 0 6h-1"/></symbol>
+    <symbol id="i-croissant" viewBox="0 0 24 24"><path d="m4.6 13.11 5.79-3.21c1.89-1.05 4.79 1.78 3.71 3.71l-3.22 5.81C8.8 23.16.79 15.23 4.6 13.11Z"/><path d="m10.5 9.5-1-2.29C9.2 6.48 8.5 6 7.7 6H6.41a2 2 0 0 0-1.66.9l-.46.69a2 2 0 0 1-1.66.9H2"/><path d="m11.91 5.13.51-2.18c.17-.69.81-1.13 1.52-.99 1.13.22 2.4.74 2.92 1.85.4.85.62 2.05.7 3.25C17.71 8.85 18 10 18 10"/></symbol>
+    <symbol id="i-utensils" viewBox="0 0 24 24"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2M7 2v20"/><path d="M21 15V2a5 5 0 0 0-5 5v6a2 2 0 0 0 2 2h3v7"/></symbol>
+    <symbol id="i-compass" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></symbol>
+    <symbol id="i-trophy" viewBox="0 0 24 24"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6M18 9h1.5a2.5 2.5 0 0 0 0-5H18M4 22h16M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22M18 2H6v7a6 6 0 0 0 12 0Z"/></symbol>
+    <symbol id="i-sliders" viewBox="0 0 24 24"><line x1="4" x2="4" y1="21" y2="14"/><line x1="4" x2="4" y1="10" y2="3"/><line x1="12" x2="12" y1="21" y2="12"/><line x1="12" x2="12" y1="8" y2="3"/><line x1="20" x2="20" y1="21" y2="16"/><line x1="20" x2="20" y1="12" y2="3"/><line x1="2" x2="6" y1="14" y2="14"/><line x1="10" x2="14" y1="8" y2="8"/><line x1="18" x2="22" y1="16" y2="16"/></symbol>
+    <symbol id="i-map" viewBox="0 0 24 24"><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"/><line x1="9" x2="9" y1="3" y2="18"/><line x1="15" x2="15" y1="6" y2="21"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></symbol>
+    <symbol id="i-arrow-left" viewBox="0 0 24 24"><path d="m12 19-7-7 7-7M19 12H5"/></symbol>
+    <symbol id="i-arrow-right" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></symbol>
+    <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8M21 3v5h-5M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16M8 16H3v5"/></symbol>
+    <symbol id="i-download" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></symbol>
+    <symbol id="i-bed" viewBox="0 0 24 24"><path d="M2 4v16M2 8h18a2 2 0 0 1 2 2v10M2 17h20M6 8v9"/><circle cx="9" cy="11.5" r="2.5"/></symbol>
+  </defs>
+</svg>
+
 <!-- Top bar -->
 <header class="topbar">
   <div class="topbar-left">
-    <div class="topbar-icon-wrap">☕</div>
+    <span class="topbar-mono">N</span>
     <div class="topbar-titles">
       <div class="topbar-title">NYC Coffee</div>
-      <div class="topbar-sub">Hotéis · Cafés · Restaurantes</div>
+      <div class="topbar-sub" id="versionPill" title="Versão / Data do deploy">—</div>
     </div>
   </div>
   <div class="topbar-right">
-    <span class="version-pill" id="versionPill" title="Versão / Data do deploy"></span>
-    <button id="refreshBtn" class="topbar-btn show" title="Limpar cache e atualizar app">🔄</button>
-    <button id="installBtn" class="topbar-btn" title="Instalar">⬇</button>
+    <button id="refreshBtn" class="topbar-btn show" title="Atualizar"><svg class="icon"><use href="#i-refresh"/></svg></button>
+    <button id="installBtn" class="topbar-btn" title="Instalar"><svg class="icon"><use href="#i-download"/></svg></button>
   </div>
 </header>
 
@@ -755,34 +728,36 @@
   <div class="card" id="searchCard">
     <!-- STATE: choose (initial) -->
     <div id="refStateChoose">
-      <div class="reference-step-label">Passo 1 · Ponto de referência</div>
-      <div class="reference-step-title">De onde você está procurando?</div>
+      <div class="reference-step-title">Ponto de referência</div>
       <div class="reference-options">
         <button class="ref-opt" id="nearMeBtn" type="button">
-          <div class="ref-opt-icon">📍</div>
-          <div class="ref-opt-title">Minha localização</div>
-          <div class="ref-opt-desc">Usa o GPS do seu celular</div>
+          <svg class="icon icon-lg"><use href="#i-pin"/></svg>
+          <div>
+            <div class="ref-opt-title">Minha localização</div>
+            <div class="ref-opt-desc">Via GPS do dispositivo</div>
+          </div>
         </button>
         <button class="ref-opt" id="refOptPlace" type="button">
-          <div class="ref-opt-icon">🏨</div>
-          <div class="ref-opt-title">Hotel ou endereço</div>
-          <div class="ref-opt-desc">Buscar um lugar específico</div>
+          <svg class="icon icon-lg"><use href="#i-building"/></svg>
+          <div>
+            <div class="ref-opt-title">Hotel ou endereço</div>
+            <div class="ref-opt-desc">Buscar um lugar</div>
+          </div>
         </button>
       </div>
     </div>
 
     <!-- STATE: search (entry + presets) -->
     <div id="refStateSearch" style="display:none">
-      <button class="back-mini" id="refSearchBack" type="button">↩ Voltar</button>
-      <div class="reference-step-title small">Onde está hospedado?</div>
+      <button class="back-mini" id="refSearchBack" type="button"><svg class="icon icon-sm"><use href="#i-arrow-left"/></svg> Voltar</button>
       <div class="search-input-wrap">
-        <span class="search-icon">🔍</span>
-        <input type="text" id="searchInput" class="search-input" placeholder="Hotel, café, bakery, endereço…" autocomplete="off"/>
+        <svg class="icon icon-sm search-icon-svg"><use href="#i-search"/></svg>
+        <input type="text" id="searchInput" class="search-input" placeholder="Hotel, café, bakery ou endereço" autocomplete="off"/>
         <button id="searchBtn" class="search-btn">Buscar</button>
         <div id="autocomplete" class="autocomplete"></div>
       </div>
       <div id="presetsBlock">
-        <div class="presets-label">Sugestões populares</div>
+        <div class="presets-label">Sugestões</div>
         <div class="preset-chips" id="presetsRow"></div>
       </div>
     </div>
@@ -790,9 +765,9 @@
     <!-- STATE: set (reference locked) -->
     <div id="refStateSet" style="display:none">
       <div class="reference-summary">
-        <div class="reference-summary-icon" id="refSummaryIcon">📍</div>
+        <div class="reference-summary-icon" id="refSummaryIcon"><svg class="icon"><use href="#i-pin"/></svg></div>
         <div class="reference-summary-text">
-          <div class="reference-summary-label">Ponto de referência</div>
+          <div class="reference-summary-label">Referência</div>
           <div class="reference-summary-name" id="refSummaryName">—</div>
         </div>
         <button class="reference-change-btn" id="changeRefBtn" type="button">Trocar</button>
@@ -802,20 +777,20 @@
     <div id="errorBox"></div>
   </div>
 
-  <!-- Discover CTA: Top NYC (sem ponto de referencia) -->
+  <!-- Discover row: Top NYC -->
   <button class="discover-cta" id="topBtn" type="button">
-    <span class="discover-icon">🏆</span>
+    <svg class="icon icon-lg discover-icon"><use href="#i-trophy"/></svg>
     <span class="discover-text">
-      <span class="discover-title">Explorar top de NYC</span>
-      <span class="discover-desc">Ranking dos melhores cafés &amp; bakeries da cidade</span>
+      <span class="discover-title">Top NYC</span>
+      <span class="discover-desc">Os melhores cafés e padarias da cidade</span>
     </span>
-    <span class="discover-arrow">→</span>
+    <svg class="icon icon-sm discover-arrow"><use href="#i-arrow-right"/></svg>
   </button>
 
   <!-- Filters card -->
   <div class="card" id="filtersCard">
     <div class="filters-header">
-      <span class="card-title"><span class="card-icon">⚙</span> Filtros</span>
+      <span class="card-title"><span class="card-icon"><svg class="icon icon-sm"><use href="#i-sliders"/></svg></span> Filtros</span>
       <button id="resetFilters" class="reset-link">Limpar</button>
     </div>
     <div class="filter-row">
@@ -842,7 +817,7 @@
   <!-- Map card -->
   <div class="card map-card" id="mapCard">
     <div class="map-header-row">
-      <span class="card-title"><span class="card-icon">🗺️</span> Mapa</span>
+      <span class="card-title"><span class="card-icon"><svg class="icon icon-sm"><use href="#i-map"/></svg></span> Mapa</span>
       <button id="mapToggle" class="map-toggle-btn">⛶ Expandir</button>
     </div>
     <div class="map-wrap">
@@ -881,23 +856,23 @@
 <!-- Bottom nav -->
 <nav class="bottom-nav">
   <button class="nav-item active" data-filter="all">
-    <div class="nav-icon">🌐</div>
+    <svg class="icon nav-icon"><use href="#i-compass"/></svg>
     <div class="nav-label">Todos</div>
   </button>
   <button class="nav-item" data-filter="hotel">
-    <div class="nav-icon">🏨</div>
+    <svg class="icon nav-icon"><use href="#i-bed"/></svg>
     <div class="nav-label">Hotéis</div>
   </button>
   <button class="nav-item" data-filter="cafe">
-    <div class="nav-icon">☕</div>
+    <svg class="icon nav-icon"><use href="#i-coffee"/></svg>
     <div class="nav-label">Cafés</div>
   </button>
   <button class="nav-item" data-filter="bakery">
-    <div class="nav-icon">🥐</div>
-    <div class="nav-label">Bakery</div>
+    <svg class="icon nav-icon"><use href="#i-croissant"/></svg>
+    <div class="nav-label">Padarias</div>
   </button>
   <button class="nav-item" data-filter="restaurant">
-    <div class="nav-icon">🍽️</div>
+    <svg class="icon nav-icon"><use href="#i-utensils"/></svg>
     <div class="nav-label">Restaurantes</div>
   </button>
 </nav>
@@ -1665,7 +1640,7 @@ async function runSearch(name, coords) {
   // Atualiza picker UI pra estado 'set'
   const isGeo = name.includes('Minha localização');
   setReferenceUIState('set', {
-    icon: isGeo ? '📍' : (centerType === 'hotel' ? '🏨' : centerType === 'cafe' ? '☕' : centerType === 'bakery' ? '🥐' : centerType === 'restaurant' ? '🍽️' : '🏨'),
+    iconId: isGeo ? 'i-pin' : (centerType === 'cafe' ? 'i-coffee' : centerType === 'bakery' ? 'i-croissant' : centerType === 'restaurant' ? 'i-utensils' : 'i-building'),
     name: isGeo ? 'Sua localização atual' : name
   });
   // Esconde os chips de lugares populares quando ja' existe uma busca ativa
@@ -2009,15 +1984,13 @@ function requestUserLocation() {
     return;
   }
   // Visual feedback no botao escolha (icone temporario)
-  const optIcon = nearMeBtn.querySelector('.ref-opt-icon');
-  const origIcon = optIcon ? optIcon.textContent : '📍';
-  if (optIcon) optIcon.textContent = '⏳';
   nearMeBtn.disabled = true;
+  nearMeBtn.style.opacity = '0.6';
   navigator.geolocation.getCurrentPosition(
     (pos) => {
       userLocation = [pos.coords.latitude, pos.coords.longitude];
-      if (optIcon) optIcon.textContent = origIcon;
       nearMeBtn.disabled = false;
+      nearMeBtn.style.opacity = '';
       showUserMarker(userLocation);
       searchInput.value = '';
       autocomplete.classList.remove('show');
@@ -2025,8 +1998,8 @@ function requestUserLocation() {
       // Estado 'set' eh aplicado dentro de runSearch via setReferenceUIState
     },
     (err) => {
-      if (optIcon) optIcon.textContent = origIcon;
       nearMeBtn.disabled = false;
+      nearMeBtn.style.opacity = '';
       let msg = 'Não consegui acessar sua localização.';
       if (err.code === 1) msg = 'Permissão negada. Habilite a localização nas configurações do Safari/Chrome.';
       else if (err.code === 2) msg = 'Localização indisponível no momento.';
@@ -2048,7 +2021,8 @@ function setReferenceUIState(state, refData) {
   search.style.display = state === 'search' ? '' : 'none';
   setSt.style.display = state === 'set' ? '' : 'none';
   if (state === 'set' && refData) {
-    document.getElementById('refSummaryIcon').textContent = refData.icon || '📍';
+    const iconId = refData.iconId || 'i-pin';
+    document.getElementById('refSummaryIcon').innerHTML = `<svg class="icon"><use href="#${iconId}"/></svg>`;
     document.getElementById('refSummaryName').textContent = refData.name || '—';
   }
 }
@@ -2120,7 +2094,7 @@ function runTopRanking() {
   if (icEl2) icEl2.textContent = '🏆';
   if (presetsBlock) presetsBlock.style.display = 'none';
   // Picker UI pra modo Top NYC (sem ref especifica)
-  setReferenceUIState('set', { icon: '🏆', name: 'Top NYC (sem referência específica)' });
+  setReferenceUIState('set', { iconId: 'i-trophy', name: 'Top NYC' });
 
   updateFilterButtons();
   currentSort = 'rating';
