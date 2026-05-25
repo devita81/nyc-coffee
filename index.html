@@ -539,6 +539,21 @@
     font-size: 64px; font-weight: 700;
     letter-spacing: -0.04em;
   }
+  .place-brandcard {
+    width: 100%; aspect-ratio: 16/9;
+    background: linear-gradient(135deg, var(--green-dark), var(--green));
+    border-radius: 8px;
+    margin-bottom: 12px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .place-brandcard img {
+    width: 84px; height: 84px;
+    object-fit: contain;
+    background: white;
+    border-radius: 18px;
+    padding: 14px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+  }
   .place-instagram {
     display: inline-flex; align-items: center; gap: 6px;
     color: var(--purple); text-decoration: none; font-weight: 500;
@@ -1325,6 +1340,46 @@ try { wikiCache = JSON.parse(localStorage.getItem(WIKI_CACHE_KEY) || '{}'); } ca
 function saveWikiCache() {
   try { localStorage.setItem(WIKI_CACHE_KEY, JSON.stringify(wikiCache)); } catch (e) {}
 }
+// Mapa nome → domínio (pra fallback de logo via Google Favicons)
+const SHOP_DOMAINS = {
+  "Apple Fifth Avenue": "apple.com", "Apple SoHo": "apple.com",
+  "Tiffany & Co Landmark": "tiffany.com", "Bergdorf Goodman": "bergdorfgoodman.com",
+  "Saks Fifth Avenue": "saksfifthavenue.com", "Bloomingdale's 59th": "bloomingdales.com",
+  "Macy's Herald Square": "macys.com", "Cartier Mansion": "cartier.com",
+  "Louis Vuitton Maison NY": "louisvuitton.com", "Hermès Madison": "hermes.com",
+  "Bottega Veneta Madison": "bottegaveneta.com", "Goyard": "goyard.com",
+  "Loro Piana": "loropiana.com", "Brunello Cucinelli": "brunellocucinelli.com",
+  "Bonpoint Madison": "bonpoint.com",
+  "Dover Street Market NY": "doverstreetmarket.com", "Kith SoHo": "kith.com",
+  "Supreme NY": "supremenewyork.com", "Glossier SoHo": "glossier.com",
+  "Aesop Howard": "aesop.com", "Aesop Madison": "aesop.com", "Aesop Williamsburg": "aesop.com",
+  "Le Labo Nolita": "lelabofragrances.com", "Le Labo Williamsburg": "lelabofragrances.com",
+  "Diptyque West Village": "diptyqueparis.com", "Byredo SoHo": "byredo.com",
+  "Acne Studios SoHo": "acnestudios.com", "Comme des Garçons": "comme-des-garcons.com",
+  "Reformation SoHo": "thereformation.com", "The Apartment by The Line": "theline.com",
+  "Coming Soon": "comingsoonnewyork.com",
+  "Strand Bookstore": "strandbooks.com", "McNally Jackson SoHo": "mcnallyjackson.com",
+  "McNally Jackson Williamsburg": "mcnallyjackson.com", "Rizzoli Bookstore": "rizzolibookstore.com",
+  "Albertine Books": "albertine.com", "Books are Magic": "booksaremagic.net",
+  "Three Lives & Company": "threelivesbooks.com", "Idlewild Books": "idlewildbooks.com",
+  "Goods for the Study": "goodsforthestudy.com", "Printed Matter": "printedmatter.org",
+  "192 Books": "192books.com", "Greenlight Bookstore": "greenlightbookstore.com",
+  "Powerhouse Arena": "powerhousearena.com",
+  "ABC Carpet & Home": "abchome.com", "John Derian Company": "johnderian.com",
+  "Roman and Williams Guild": "rwguild.com", "MoMA Design Store SoHo": "store.moma.org",
+  "MoMA Design Store 53rd": "store.moma.org", "Fishs Eddy": "fishseddy.com",
+  "John Robshaw Textiles": "johnrobshaw.com", "Atelier Courbet": "ateliercourbet.com",
+  "Catbird": "catbirdnyc.com",
+  "FAO Schwarz": "faoschwarz.com", "Lego Store Fifth Avenue": "lego.com",
+  "Nintendo NY": "nintendonyc.com", "Mast Brothers Chocolate": "mastmarket.com",
+  "C.O. Bigelow Apothecary": "bigelowchemists.com", "Casey Rubber Stamps": "caseyrubberstamps.com",
+  "Wing on Wo": "wingonwoand.co", "Toy Tokyo": "toytokyo.com",
+  "M&M's World": "mms.com", "Rough Trade NY": "roughtradenyc.com",
+  "The Met Store": "store.metmuseum.org",
+  "Eataly Flatiron": "eataly.com", "Eataly Downtown": "eataly.com",
+  "Murray's Cheese Shop": "murrayscheese.com"
+};
+
 async function getWikiPhoto(pageTitle) {
   if (pageTitle in wikiCache) return wikiCache[pageTitle]; // pode ser null se falhou antes
   try {
@@ -1858,18 +1913,24 @@ function renderPlaceCard(container, r, idx) {
   const addrText = r.address || (r.curated ? r.curated.addr : '');
   const areaText = (r.type === "hotel" && r.curated) ? ` · ${r.curated.area}` : ((r.type === "shop" && r.curated && r.curated.area) ? ` · ${r.curated.area}` : '');
   const addrHtml = addrText ? `<div class="place-meta">${addrText}${areaText}</div>` : '';
-  // Hero photo: r.photo explicito > cache wiki > monogram fallback
+  // Hero hierarchy: r.photo > cache wiki > favicon brand > monogram
   let heroHtml = '';
   let resolvedPhoto = r.photo;
   if (!resolvedPhoto && r.wikipedia && (r.wikipedia in wikiCache) && wikiCache[r.wikipedia]) {
     resolvedPhoto = wikiCache[r.wikipedia];
   }
+  const shopDomain = r.type === 'shop' ? SHOP_DOMAINS[r.name] : null;
   if (resolvedPhoto) {
     heroHtml = `<img class="place-photo" src="${resolvedPhoto}" alt="${r.name}" loading="lazy" onerror="this.style.display='none'"/>`;
   } else if (r.type === 'shop' && r.curated) {
     const initial = (r.name || '?').replace(/^The\s+/i, '').charAt(0).toUpperCase();
     const safeName = (r.name || '').replace(/"/g, '&quot;');
-    heroHtml = `<div class="place-monogram" data-shop-monogram="${safeName}">${initial}</div>`;
+    if (shopDomain) {
+      // Favicon do dominio em fundo verde-escuro tipo cartao de marca
+      heroHtml = `<div class="place-brandcard" data-shop-monogram="${safeName}"><img src="https://www.google.com/s2/favicons?domain=${shopDomain}&sz=128" alt="${r.name}" onerror="this.parentNode.innerHTML='${initial}';this.parentNode.classList.add('place-monogram');this.parentNode.classList.remove('place-brandcard');"/></div>`;
+    } else {
+      heroHtml = `<div class="place-monogram" data-shop-monogram="${safeName}">${initial}</div>`;
+    }
   }
   const bookingLink = r.type === "hotel" ? `<a href="https://www.booking.com/searchresults.html?ss=${encodeURIComponent(r.name + ' New York')}" target="_blank">Booking</a>` : '';
   const instagramLink = r.instagram ? `<a class="place-instagram" href="https://instagram.com/${r.instagram}" target="_blank"><svg class="icon"><use href="#i-instagram"/></svg>@${r.instagram}</a>` : '';
