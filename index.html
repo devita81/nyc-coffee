@@ -1642,7 +1642,11 @@ radius.addEventListener('input', () => {
 });
 // 'change' dispara quando o usuario solta o slider — re-roda a busca com novo raio
 radius.addEventListener('change', () => {
-  if (currentCenter) runSearch(currentCenter.name, currentCenter.coords);
+  if (!currentCenter) return;
+  // Modos sem raio (Favoritos / Top NYC) ignoram o slider
+  if (currentCenter.name === 'Meus favoritos' || /Top|🏆/.test(currentCenter.name)) return;
+  // Re-fetch com novo raio mas preserva categorias selecionadas + foco se houver
+  runSearch(currentCenter.name, currentCenter.coords, { preserveFilters: true });
 });
 ratingFilter.addEventListener('input', () => { updateRatingFilterLabel(); if (currentResults.length) renderResults(); });
 onlyRated.addEventListener('change', () => { if (currentResults.length) renderResults(); });
@@ -1889,35 +1893,33 @@ function detectSearchType(name, coords) {
   return null;
 }
 
-async function runSearch(name, coords) {
+async function runSearch(name, coords, opts = {}) {
   clearMarkers();
-  clearRoute();
-  // If map is collapsed, still keep collapsed (user choice) but invalidate size
+  if (!opts.preserveFilters) clearRoute();
   setTimeout(() => map.invalidateSize(), 50);
-  // Loading minimo - sera substituido em <100ms pelos curados
   errorBox.innerHTML = '';
   currentCenter = { name, coords };
   centerType = detectSearchType(name, coords);
-  focusedItem = null; // reset foco em nova busca
+  if (!opts.preserveFilters) focusedItem = null; // reset foco so' em busca nova
   const subEl = document.getElementById('modeSubtitle');
   if (subEl) { subEl.classList.remove('route'); subEl.innerHTML = ''; subEl.textContent = name; }
   const tEl = document.getElementById('modeTitle');
   if (tEl) tEl.textContent = 'Próximo de';
   const icEl = document.getElementById('modeHeaderIcon');
   if (icEl) icEl.textContent = '📍';
-  // Atualiza picker UI pra estado 'set'
   const isGeo = name.includes('Minha localização');
   setReferenceUIState('set', {
     iconId: isGeo ? 'i-pin' : (centerType === 'cafe' ? 'i-coffee' : centerType === 'bakery' ? 'i-croissant' : centerType === 'restaurant' ? 'i-utensils' : 'i-building'),
     name: isGeo ? 'Sua localização atual' : name
   });
-  // Esconde os chips de lugares populares quando ja' existe uma busca ativa
   if (presetsBlock) presetsBlock.style.display = 'none';
-  // Reset estado do Top NYC quando faz busca normal
   const tb = document.getElementById('topBtn');
   if (tb) { tb.classList.remove('active'); tb.textContent = '🏆 Top NYC'; }
-  activeFilters = new Set(validTypes());
-  updateFilterButtons();
+  // SO' reseta categorias quando eh busca nova; raio/avaliacao preservam selecao
+  if (!opts.preserveFilters) {
+    activeFilters = new Set(validTypes());
+    updateFilterButtons();
+  }
   const centerLabel = centerType === 'hotel' ? "🏨" : centerType === 'cafe' ? "☕" : centerType === 'bakery' ? "🥐" : centerType === 'restaurant' ? "🍽️" : "📍";
   const centerColorType = centerType || 'hotel';
   activeCenterMarker = L.marker(coords, { icon: makeIcon(centerColorType, centerLabel, false, true) }).addTo(map);
