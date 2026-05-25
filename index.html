@@ -280,31 +280,101 @@
     margin-left: 6px; font-weight: 700; letter-spacing: 0.04em;
   }
 
-  /* Quick actions in search card */
-  .quick-row { margin-bottom: 14px; display: flex; gap: 8px; }
-  .quick-row .quick-btn { flex: 1; padding: 13px 12px; font-size: 14px; justify-content: center; }
-  .quick-btn-secondary {
-    background: white !important; color: var(--purple) !important;
-    border: 1px solid var(--border) !important;
-    box-shadow: var(--shadow-1) !important;
+  /* Reference picker */
+  .reference-step-label {
+    font-size: 10px; color: var(--gold-deep); font-weight: 700;
+    letter-spacing: 0.10em; text-transform: uppercase; margin-bottom: 6px;
   }
-  .quick-btn-secondary:hover {
-    background: var(--green-bg) !important; color: var(--purple) !important;
-    border-color: var(--green-mid) !important;
+  .reference-step-title {
+    font-family: var(--font-display);
+    font-size: 18px; font-weight: 600; color: var(--ink);
+    letter-spacing: -0.01em; margin-bottom: 16px;
   }
-  .quick-btn-secondary.active {
-    background: linear-gradient(180deg, #d8b06d, #a07f3c) !important;
-    color: white !important;
-    border-color: var(--gold-deep) !important;
-    box-shadow: inset 0 1px 0 rgba(255,255,255,0.20), 0 4px 10px rgba(160,127,60,0.30) !important;
+  .reference-step-title.small { font-size: 15px; margin-bottom: 10px; }
+  .reference-options {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
   }
-  .or-divider {
+  .ref-opt {
+    display: flex; flex-direction: column; align-items: flex-start; gap: 4px;
+    padding: 16px 14px;
+    background: linear-gradient(180deg, white, #f6faf7);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    cursor: pointer; text-align: left;
+    box-shadow: var(--shadow-1);
+    transition: transform 0.12s, box-shadow 0.18s, border-color 0.18s, background 0.2s;
+  }
+  .ref-opt:hover { border-color: var(--green-mid); box-shadow: var(--shadow-2); }
+  .ref-opt:active { transform: scale(0.98); }
+  .ref-opt-icon { font-size: 26px; line-height: 1; margin-bottom: 4px; }
+  .ref-opt-title {
+    font-size: 14px; font-weight: 700; color: var(--ink);
+    letter-spacing: -0.005em;
+  }
+  .ref-opt-desc { font-size: 11px; color: var(--muted); font-weight: 500; }
+
+  /* Reference SET — compact summary */
+  .reference-summary {
     display: flex; align-items: center; gap: 12px;
-    margin: 6px 0 12px; color: var(--muted-soft); font-size: 10px; text-transform: uppercase; letter-spacing: 0.10em; font-weight: 600;
+    padding: 4px 2px;
   }
-  .or-divider::before, .or-divider::after {
-    content: ""; flex: 1; height: 1px; background: var(--border);
+  .reference-summary-icon {
+    width: 44px; height: 44px; border-radius: 12px; flex-shrink: 0;
+    background: linear-gradient(135deg, var(--green-light), #cde2d4);
+    color: var(--purple);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px;
+    border: 1px solid rgba(27,67,50,0.08);
+    box-shadow: var(--shadow-1);
   }
+  .reference-summary-text { flex: 1; min-width: 0; }
+  .reference-summary-label {
+    font-size: 10px; color: var(--muted); font-weight: 700;
+    letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 2px;
+  }
+  .reference-summary-name {
+    font-family: var(--font-display);
+    font-size: 16px; font-weight: 600; color: var(--ink);
+    letter-spacing: -0.01em; line-height: 1.2;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .reference-change-btn {
+    background: var(--green-bg); color: var(--purple);
+    border: 1px solid var(--border);
+    border-radius: 10px; padding: 7px 12px;
+    font-size: 12px; font-weight: 600; cursor: pointer; flex-shrink: 0;
+    transition: all 0.15s;
+  }
+  .reference-change-btn:hover { background: var(--purple); color: white; border-color: var(--purple); }
+  .reference-change-btn:active { transform: scale(0.96); }
+
+  /* Mini back button (used inside picker) */
+  .back-mini {
+    background: none; border: none; color: var(--purple);
+    font-size: 12px; font-weight: 600; cursor: pointer;
+    padding: 2px 0; margin-bottom: 10px;
+  }
+  .back-mini:hover { color: var(--gold-deep); }
+
+  /* Discover CTA (Top NYC) */
+  .discover-cta {
+    display: flex; align-items: center; gap: 14px;
+    width: 100%; padding: 14px 16px; margin-bottom: 14px;
+    background: linear-gradient(180deg, #fbf5e7, #f3e6c8);
+    border: 1px solid var(--gold-accent);
+    border-radius: 18px;
+    cursor: pointer; text-align: left;
+    box-shadow: var(--shadow-1);
+    transition: transform 0.12s, box-shadow 0.18s;
+    font-family: var(--font-sans);
+  }
+  .discover-cta:hover { box-shadow: var(--shadow-2); transform: translateY(-1px); }
+  .discover-cta:active { transform: scale(0.99); }
+  .discover-icon { font-size: 28px; line-height: 1; flex-shrink: 0; }
+  .discover-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }
+  .discover-title { font-family: var(--font-display); font-size: 16px; font-weight: 600; color: var(--ink); letter-spacing: -0.01em; }
+  .discover-desc { font-size: 11px; color: var(--gold-deep); font-weight: 600; }
+  .discover-arrow { font-size: 18px; color: var(--gold-deep); flex-shrink: 0; }
   .presets-label {
     font-size: 10px; color: var(--muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em;
     margin-top: 16px; margin-bottom: 8px;
@@ -676,30 +746,71 @@
   <div class="mode-header" id="modeHeader">
     <div class="mode-header-icon" id="modeHeaderIcon">📍</div>
     <div class="mode-header-text">
-      <h2 id="modeTitle">Próximo de</h2>
-      <div class="mode-subtitle" id="modeSubtitle">The Bowery Hotel</div>
+      <h2 id="modeTitle">Escolha um ponto</h2>
+      <div class="mode-subtitle" id="modeSubtitle">para começar a explorar</div>
     </div>
   </div>
 
-  <!-- Search card -->
+  <!-- Reference picker card -->
   <div class="card" id="searchCard">
-    <div class="quick-row">
-      <button id="nearMeBtn" class="quick-btn">📍 Minha localização</button>
-      <button id="topBtn" class="quick-btn quick-btn-secondary">🏆 Top NYC</button>
+    <!-- STATE: choose (initial) -->
+    <div id="refStateChoose">
+      <div class="reference-step-label">Passo 1 · Ponto de referência</div>
+      <div class="reference-step-title">De onde você está procurando?</div>
+      <div class="reference-options">
+        <button class="ref-opt" id="nearMeBtn" type="button">
+          <div class="ref-opt-icon">📍</div>
+          <div class="ref-opt-title">Minha localização</div>
+          <div class="ref-opt-desc">Usa o GPS do seu celular</div>
+        </button>
+        <button class="ref-opt" id="refOptPlace" type="button">
+          <div class="ref-opt-icon">🏨</div>
+          <div class="ref-opt-title">Hotel ou endereço</div>
+          <div class="ref-opt-desc">Buscar um lugar específico</div>
+        </button>
+      </div>
     </div>
-    <div class="or-divider">ou busque um endereço</div>
-    <div class="search-input-wrap">
-      <span class="search-icon">🔍</span>
-      <input type="text" id="searchInput" class="search-input" placeholder="Hotel, café, bakery, endereço…" autocomplete="off"/>
-      <button id="searchBtn" class="search-btn">Buscar</button>
-      <div id="autocomplete" class="autocomplete"></div>
+
+    <!-- STATE: search (entry + presets) -->
+    <div id="refStateSearch" style="display:none">
+      <button class="back-mini" id="refSearchBack" type="button">↩ Voltar</button>
+      <div class="reference-step-title small">Onde está hospedado?</div>
+      <div class="search-input-wrap">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="searchInput" class="search-input" placeholder="Hotel, café, bakery, endereço…" autocomplete="off"/>
+        <button id="searchBtn" class="search-btn">Buscar</button>
+        <div id="autocomplete" class="autocomplete"></div>
+      </div>
+      <div id="presetsBlock">
+        <div class="presets-label">Sugestões populares</div>
+        <div class="preset-chips" id="presetsRow"></div>
+      </div>
     </div>
-    <div id="presetsBlock">
-      <div class="presets-label">Lugares populares</div>
-      <div class="preset-chips" id="presetsRow"></div>
+
+    <!-- STATE: set (reference locked) -->
+    <div id="refStateSet" style="display:none">
+      <div class="reference-summary">
+        <div class="reference-summary-icon" id="refSummaryIcon">📍</div>
+        <div class="reference-summary-text">
+          <div class="reference-summary-label">Ponto de referência</div>
+          <div class="reference-summary-name" id="refSummaryName">—</div>
+        </div>
+        <button class="reference-change-btn" id="changeRefBtn" type="button">Trocar</button>
+      </div>
     </div>
+
     <div id="errorBox"></div>
   </div>
+
+  <!-- Discover CTA: Top NYC (sem ponto de referencia) -->
+  <button class="discover-cta" id="topBtn" type="button">
+    <span class="discover-icon">🏆</span>
+    <span class="discover-text">
+      <span class="discover-title">Explorar top de NYC</span>
+      <span class="discover-desc">Ranking dos melhores cafés &amp; bakeries da cidade</span>
+    </span>
+    <span class="discover-arrow">→</span>
+  </button>
 
   <!-- Filters card -->
   <div class="card" id="filtersCard">
@@ -742,7 +853,7 @@
   <!-- Results card -->
   <div class="card" id="resultsCard">
     <div id="panel">
-      <div class="empty-state"><div class="icon">🔍</div><p>Digite ou escolha algo acima.</p></div>
+      <div class="empty-state"><div class="icon">🔍</div><p>Escolha seu ponto de referência acima<br>pra ver lugares próximos.</p></div>
     </div>
   </div>
 
@@ -1551,6 +1662,12 @@ async function runSearch(name, coords) {
   if (tEl) tEl.textContent = 'Próximo de';
   const icEl = document.getElementById('modeHeaderIcon');
   if (icEl) icEl.textContent = '📍';
+  // Atualiza picker UI pra estado 'set'
+  const isGeo = name.includes('Minha localização');
+  setReferenceUIState('set', {
+    icon: isGeo ? '📍' : (centerType === 'hotel' ? '🏨' : centerType === 'cafe' ? '☕' : centerType === 'bakery' ? '🥐' : centerType === 'restaurant' ? '🍽️' : '🏨'),
+    name: isGeo ? 'Sua localização atual' : name
+  });
   // Esconde os chips de lugares populares quando ja' existe uma busca ativa
   if (presetsBlock) presetsBlock.style.display = 'none';
   // Reset estado do Top NYC quando faz busca normal
@@ -1891,25 +2008,25 @@ function requestUserLocation() {
     alert('Seu navegador não suporta geolocalização.');
     return;
   }
+  // Visual feedback no botao escolha (icone temporario)
+  const optIcon = nearMeBtn.querySelector('.ref-opt-icon');
+  const origIcon = optIcon ? optIcon.textContent : '📍';
+  if (optIcon) optIcon.textContent = '⏳';
   nearMeBtn.disabled = true;
-  nearMeBtn.textContent = '📍 Localizando…';
   navigator.geolocation.getCurrentPosition(
     (pos) => {
       userLocation = [pos.coords.latitude, pos.coords.longitude];
-      nearMeBtn.classList.add('active');
-      nearMeBtn.textContent = '📍 Você aqui';
+      if (optIcon) optIcon.textContent = origIcon;
       nearMeBtn.disabled = false;
       showUserMarker(userLocation);
-      // Limpa o input: o ponto central ja' aparece no modeSubtitle.
-      // Manter "Minha localizacao" no input fazia o botao "Buscar" tentar
-      // geocodificar isso na Nominatim e falhar.
       searchInput.value = '';
       autocomplete.classList.remove('show');
       runSearch('📍 Minha localização', userLocation);
+      // Estado 'set' eh aplicado dentro de runSearch via setReferenceUIState
     },
     (err) => {
+      if (optIcon) optIcon.textContent = origIcon;
       nearMeBtn.disabled = false;
-      nearMeBtn.textContent = '📍 Perto de mim';
       let msg = 'Não consegui acessar sua localização.';
       if (err.code === 1) msg = 'Permissão negada. Habilite a localização nas configurações do Safari/Chrome.';
       else if (err.code === 2) msg = 'Localização indisponível no momento.';
@@ -1920,17 +2037,51 @@ function requestUserLocation() {
   );
 }
 
-nearMeBtn.addEventListener('click', () => {
-  if (nearMeBtn.classList.contains('active') && userLocation) {
-    // Toggle off
-    if (userMarker) { map.removeLayer(userMarker); userMarker = null; }
-    clearRoute();
-    nearMeBtn.classList.remove('active');
-    nearMeBtn.textContent = '📍 Minha localização';
-    userLocation = null;
-  } else {
-    requestUserLocation();
+nearMeBtn.addEventListener('click', requestUserLocation);
+
+// ===================== Reference picker UI state machine =====================
+function setReferenceUIState(state, refData) {
+  const choose = document.getElementById('refStateChoose');
+  const search = document.getElementById('refStateSearch');
+  const setSt = document.getElementById('refStateSet');
+  choose.style.display = state === 'choose' ? '' : 'none';
+  search.style.display = state === 'search' ? '' : 'none';
+  setSt.style.display = state === 'set' ? '' : 'none';
+  if (state === 'set' && refData) {
+    document.getElementById('refSummaryIcon').textContent = refData.icon || '📍';
+    document.getElementById('refSummaryName').textContent = refData.name || '—';
   }
+}
+
+document.getElementById('refOptPlace').addEventListener('click', () => {
+  setReferenceUIState('search');
+  setTimeout(() => searchInput?.focus(), 100);
+});
+document.getElementById('refSearchBack').addEventListener('click', () => {
+  setReferenceUIState('choose');
+});
+document.getElementById('changeRefBtn').addEventListener('click', () => {
+  // Limpa referencia atual e volta pro chooser
+  if (userMarker) { map.removeLayer(userMarker); userMarker = null; }
+  if (activeCenterMarker) { map.removeLayer(activeCenterMarker); activeCenterMarker = null; }
+  if (radiusCircle) { map.removeLayer(radiusCircle); radiusCircle = null; }
+  clearRoute();
+  activeMarkers.forEach(m => map.removeLayer(m));
+  activeMarkers = [];
+  userLocation = null;
+  currentCenter = null;
+  centerType = null;
+  focusedItem = null;
+  currentResults = [];
+  // Reset mode header pro estado inicial
+  document.getElementById('modeTitle').textContent = 'Escolha um ponto';
+  document.getElementById('modeHeaderIcon').textContent = '📍';
+  const sub = document.getElementById('modeSubtitle');
+  sub.classList.remove('route'); sub.innerHTML = ''; sub.textContent = 'para começar a explorar';
+  // Painel de resultados volta pro estado vazio
+  panel.innerHTML = `<div class="empty-state"><div class="icon">🔍</div><p>Escolha seu ponto de referência acima pra ver lugares próximos.</p></div>`;
+  filterStatus.textContent = '';
+  setReferenceUIState('choose');
 });
 
 // ===================== Top NYC: ranking de cafes + bakeries =====================
@@ -1968,9 +2119,8 @@ function runTopRanking() {
   const icEl2 = document.getElementById('modeHeaderIcon');
   if (icEl2) icEl2.textContent = '🏆';
   if (presetsBlock) presetsBlock.style.display = 'none';
-
-  topBtn.classList.add('active');
-  topBtn.textContent = '🏆 Top NYC ✓';
+  // Picker UI pra modo Top NYC (sem ref especifica)
+  setReferenceUIState('set', { icon: '🏆', name: 'Top NYC (sem referência específica)' });
 
   updateFilterButtons();
   currentSort = 'rating';
@@ -1987,8 +2137,6 @@ function runTopRanking() {
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         userLocation = [pos.coords.latitude, pos.coords.longitude];
-        nearMeBtn.classList.add('active');
-        nearMeBtn.textContent = '📍 Você aqui';
         showUserMarker(userLocation);
         // Recalcula distancias relativas a usuario e re-renderiza
         currentResults.forEach(r => r.distance = dist(userLocation, r.coords));
@@ -2081,11 +2229,7 @@ if (versionPill) {
 // Init
 updateModeUI();
 updateFilterButtons();
-setTimeout(() => {
-  const p = presets.hotel[0];
-  searchInput.value = p.name;
-  runSearch(p.name, p.coords);
-}, 400);
+// Pagina abre no estado "choose" — usuario escolhe referencia primeiro.
 
 // ===================== PWA: Install + Service Worker =====================
 let deferredInstallPrompt = null;
