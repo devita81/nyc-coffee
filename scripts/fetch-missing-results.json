@@ -1,0 +1,208 @@
+[
+  {
+    "name": "Tiffany & Co Landmark",
+    "slug": "tiffany-and-co-landmark",
+    "status": "downloaded",
+    "yelp_match": "Tiffany & Co"
+  },
+  {
+    "name": "Bloomingdale's 59th",
+    "slug": "bloomingdale-s-59th",
+    "status": "downloaded",
+    "yelp_match": "Bloomingdale's"
+  },
+  {
+    "name": "Macy's Herald Square",
+    "slug": "macy-s-herald-square",
+    "status": "no_good_match",
+    "candidates": [
+      "Teso Life",
+      "The Fur Studio",
+      "Famous Footwear",
+      "Danny Couture",
+      "American Eagle Outfitters"
+    ]
+  },
+  {
+    "name": "Louis Vuitton Maison NY",
+    "slug": "louis-vuitton-maison-ny",
+    "status": "downloaded",
+    "yelp_match": "Louis Vuitton"
+  },
+  {
+    "name": "Loro Piana",
+    "slug": "loro-piana",
+    "status": "downloaded",
+    "yelp_match": "Loro Piana"
+  },
+  {
+    "name": "Bonpoint Madison",
+    "slug": "bonpoint-madison",
+    "status": "no_good_match",
+    "candidates": [
+      "Old Navy",
+      "Gap",
+      "Monnalisa Shop",
+      "Jacadi",
+      "Pink Chicken"
+    ]
+  },
+  {
+    "name": "Dover Street Market NY",
+    "slug": "dover-street-market-ny",
+    "status": "downloaded",
+    "yelp_match": "Dover Street Market"
+  },
+  {
+    "name": "Kith SoHo",
+    "slug": "kith-soho",
+    "status": "downloaded",
+    "yelp_match": "KITH"
+  },
+  {
+    "name": "Supreme NY",
+    "slug": "supreme-ny",
+    "status": "downloaded",
+    "yelp_match": "Supreme"
+  },
+  {
+    "name": "Glossier SoHo",
+    "slug": "glossier-soho",
+    "status": "downloaded",
+    "yelp_match": "Glossier NYC"
+  },
+  {
+    "name": "Aesop Howard",
+    "slug": "aesop-howard",
+    "status": "no_good_match",
+    "candidates": [
+      "Diptyque Prince",
+      "senti senti",
+      "Duane Reade",
+      "GingerChi",
+      "Everyday Beauty Supply Incorporated"
+    ]
+  },
+  {
+    "name": "Aesop Williamsburg",
+    "slug": "aesop-williamsburg",
+    "status": "downloaded",
+    "yelp_match": "Aesop Williamsburg"
+  },
+  {
+    "name": "Diptyque West Village",
+    "slug": "diptyque-west-village",
+    "status": "downloaded",
+    "yelp_match": "LE LABO NEW YORK CITY - WEST VILLAGE"
+  },
+  {
+    "name": "Reformation SoHo",
+    "slug": "reformation-soho",
+    "status": "downloaded",
+    "yelp_match": "Reformation"
+  },
+  {
+    "name": "The Apartment by The Line",
+    "slug": "the-apartment-by-the-line",
+    "status": "no_good_match",
+    "candidates": [
+      "O'lampia Studio",
+      "Artistic Stone",
+      "Canal Rubber Supply",
+      "Feather",
+      "Carpet Culture"
+    ]
+  },
+  {
+    "name": "McNally Jackson Williamsburg",
+    "slug": "mcnally-jackson-williamsburg",
+    "status": "downloaded",
+    "yelp_match": "McNally Jackson"
+  },
+  {
+    "name": "Books are Magic",
+    "slug": "books-are-magic",
+    "status": "downloaded",
+    "yelp_match": "Books Are Magic"
+  },
+  {
+    "name": "Idlewild Books",
+    "slug": "idlewild-books",
+    "status": "downloaded",
+    "yelp_match": "Left Bank Books"
+  },
+  {
+    "name": "John Derian Company",
+    "slug": "john-derian-company",
+    "status": "downloaded",
+    "yelp_match": "John Derian"
+  },
+  {
+    "name": "John Robshaw Textiles",
+    "slug": "john-robshaw-textiles",
+    "status": "no_good_match",
+    "candidates": [
+      "John Robshaw Textiles",
+      "Center Of Floral Design & Supply",
+      "Jamali Floral & Garden",
+      "French Wink",
+      "Herman Miller"
+    ]
+  },
+  {
+    "name": "Atelier Courbet",
+    "slug": "atelier-courbet",
+    "status": "no_good_match",
+    "candidates": [
+      "KINTO",
+      "Artifacts 20th Century",
+      "Joybird",
+      "Abbode",
+      "Stéle"
+    ]
+  },
+  {
+    "name": "Lego Store Fifth Avenue",
+    "slug": "lego-store-fifth-avenue",
+    "status": "downloaded",
+    "yelp_match": "LEGO"
+  },
+  {
+    "name": "Mast Brothers Chocolate",
+    "slug": "mast-brothers-chocolate",
+    "status": "no_good_match",
+    "candidates": [
+      "Diva Designs and Sweets"
+    ]
+  },
+  {
+    "name": "M&M's World",
+    "slug": "mandm-s-world",
+    "status": "downloaded",
+    "yelp_match": "Hershey’s Chocolate World"
+  },
+  {
+    "name": "Rough Trade NY",
+    "slug": "rough-trade-ny",
+    "status": "no_good_match",
+    "candidates": [
+      "Bookoff - New York",
+      "Brodarkey",
+      "Citron Philip",
+      "Latin Music World",
+      "Platinum Paradise"
+    ]
+  },
+  {
+    "name": "The Met Store",
+    "slug": "the-met-store",
+    "status": "no_good_match",
+    "candidates": [
+      "The Metropolitan Museum of Art",
+      "Guggenheim Museum",
+      "The Institute of Fine Arts of NYU",
+      "Associate of Art Museum",
+      "Peck Ian Fine Paintings"
+    ]
+  }
+]
