@@ -517,6 +517,34 @@
   .badge.rating-low { color: var(--muted); }
   .badge.price { color: var(--purple); }
   .badge.cuisine { color: var(--gold-deep); background: #fdf9ef; border-color: #f0e6cd; }
+  .badge.shop { color: #5a2d77; background: #f6f0fa; border-color: #e7d9f0; }
+  .badge.vibe { color: var(--ink-soft); background: white; border-color: var(--border); font-style: italic; }
+  /* Place photo (hero image em cards de loja) */
+  .place-photo {
+    width: 100%; aspect-ratio: 16/9;
+    object-fit: cover;
+    border-radius: 8px;
+    margin-bottom: 12px;
+    background: linear-gradient(135deg, var(--green-bg), #ebf1ec);
+    display: block;
+  }
+  .place-monogram {
+    width: 100%; aspect-ratio: 16/9;
+    background: linear-gradient(135deg, var(--green-dark), var(--green));
+    color: var(--gold-accent);
+    border-radius: 8px;
+    margin-bottom: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-display);
+    font-size: 64px; font-weight: 700;
+    letter-spacing: -0.04em;
+  }
+  .place-instagram {
+    display: inline-flex; align-items: center; gap: 6px;
+    color: var(--purple); text-decoration: none; font-weight: 500;
+  }
+  .place-instagram:hover { color: var(--ink); }
+  .place-instagram .icon { width: 14px; height: 14px; }
   .back-link-btn {
     display: inline-flex; align-items: center; gap: 6px;
     background: transparent;
@@ -608,7 +636,7 @@
   .nav-item.disabled { opacity: 0.30; cursor: not-allowed; }
   .nav-icon { width: 20px; height: 20px; stroke-width: 1.6; }
   .nav-item.active .nav-icon { stroke-width: 1.8; }
-  .nav-label { font-size: 10.5px; font-weight: 500; }
+  .nav-label { font-size: 10px; font-weight: 500; letter-spacing: -0.01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
 
   /* User location marker */
   .user-marker-wrap { position: relative; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; }
@@ -685,6 +713,9 @@
     <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8M21 3v5h-5M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16M8 16H3v5"/></symbol>
     <symbol id="i-download" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></symbol>
     <symbol id="i-bed" viewBox="0 0 24 24"><path d="M2 4v16M2 8h18a2 2 0 0 1 2 2v10M2 17h20M6 8v9"/><circle cx="9" cy="11.5" r="2.5"/></symbol>
+    <symbol id="i-shop" viewBox="0 0 24 24"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></symbol>
+    <symbol id="i-instagram" viewBox="0 0 24 24"><rect width="20" height="20" x="2" y="2" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" x2="17.51" y1="6.5" y2="6.5"/></symbol>
+    <symbol id="i-external" viewBox="0 0 24 24"><path d="M15 3h6v6M10 14 21 3M21 14v7H3V3h7"/></symbol>
   </defs>
 </svg>
 
@@ -874,6 +905,10 @@
   <button class="nav-item" data-filter="restaurant">
     <svg class="icon nav-icon"><use href="#i-utensils"/></svg>
     <div class="nav-label">Restaurantes</div>
+  </button>
+  <button class="nav-item" data-filter="shop">
+    <svg class="icon nav-icon"><use href="#i-shop"/></svg>
+    <div class="nav-label">Lojas</div>
   </button>
 </nav>
 
@@ -1084,7 +1119,86 @@ const curatedPlaces = [
   { name: "Russ & Daughters Cafe", aliases: ["russ daughters cafe"], type: "restaurant", cuisine: "deli;jewish", rating: 4.5, coords: [40.7211, -73.9890], addr: "127 Orchard St", desc: "Bagel + lox + smoked fish sit-down." },
   { name: "The Smith", aliases: ["the smith"], type: "restaurant", cuisine: "american", rating: 4.4, coords: [40.7287, -73.9938], addr: "55 3rd Ave", desc: "American bistro animado, brunch popular." },
   { name: "Westville Chelsea", aliases: ["westville"], type: "restaurant", cuisine: "vegetarian", rating: 4.4, coords: [40.7466, -74.0029], addr: "246 W 18th St", desc: "Vegetariano farm-to-table casual." },
-  { name: "Loring Place", aliases: ["loring place"], type: "restaurant", cuisine: "american", rating: 4.5, coords: [40.7322, -73.9978], addr: "21 W 8th St", desc: "Dan Kluger, vegetal-focado, pizza top." }
+  { name: "Loring Place", aliases: ["loring place"], type: "restaurant", cuisine: "american", rating: 4.5, coords: [40.7322, -73.9978], addr: "21 W 8th St", desc: "Dan Kluger, vegetal-focado, pizza top." },
+
+  // ===== Lojas — flagships icônicos e arquitetura =====
+  { name: "Apple Fifth Avenue", aliases: ["apple cube", "apple 5th"], type: "shop", vibe: "iconic", rating: 4.7, coords: [40.7637, -73.9728], addr: "767 5th Ave", area: "Midtown", instagram: "apple", desc: "Cubo de vidro subterrâneo, ícone arquitetônico 24h." },
+  { name: "Apple SoHo", aliases: ["apple soho"], type: "shop", vibe: "minimal", rating: 4.6, coords: [40.7245, -73.9981], addr: "103 Prince St", area: "SoHo", instagram: "apple", desc: "Prédio histórico restaurado, escadaria de vidro." },
+  { name: "Tiffany & Co Landmark", aliases: ["tiffany flagship", "tiffany 5th"], type: "shop", vibe: "luxury", rating: 4.5, coords: [40.7625, -73.9740], addr: "727 5th Ave", area: "Midtown", instagram: "tiffanyandco", desc: "Sede 1940 renovada por OMA; The Landmark." },
+  { name: "Bergdorf Goodman", aliases: ["bergdorf"], type: "shop", vibe: "luxury", rating: 4.6, coords: [40.7639, -73.9738], addr: "754 5th Ave", area: "Midtown", instagram: "bergdorfs", desc: "Beaux-Arts; vitrines de Natal cult." },
+  { name: "Saks Fifth Avenue", aliases: ["saks"], type: "shop", vibe: "luxury", rating: 4.5, coords: [40.7585, -73.9776], addr: "611 5th Ave", area: "Midtown", instagram: "saks", desc: "Luxury department store icônico desde 1924." },
+  { name: "Bloomingdale's 59th", aliases: ["bloomingdale"], type: "shop", vibe: "classic", rating: 4.5, coords: [40.7617, -73.9670], addr: "1000 3rd Ave", area: "UES", instagram: "bloomingdales", desc: "Big Brown Bag desde 1872." },
+  { name: "Macy's Herald Square", aliases: ["macys"], type: "shop", vibe: "iconic", rating: 4.4, coords: [40.7506, -73.9888], addr: "151 W 34th St", area: "Midtown", instagram: "macys", desc: "Maior loja de departamento do mundo." },
+  { name: "Cartier Mansion", aliases: ["cartier"], type: "shop", vibe: "luxury", rating: 4.6, coords: [40.7591, -73.9743], addr: "653 5th Ave", area: "Midtown", instagram: "cartier", desc: "Mansão Renaissance 1905; jóias e relojoaria." },
+  { name: "Louis Vuitton Maison NY", aliases: ["louis vuitton", "lv"], type: "shop", vibe: "luxury", rating: 4.5, coords: [40.7619, -73.9719], addr: "1 E 57th St", area: "Midtown", instagram: "louisvuitton", desc: "Flagship com obras de arte; assinado por Peter Marino." },
+  { name: "Hermès Madison", aliases: ["hermes"], type: "shop", vibe: "luxury", rating: 4.7, coords: [40.7676, -73.9698], addr: "691 Madison Ave", area: "UES", instagram: "hermes", desc: "Casa francesa em prédio neoclássico." },
+  { name: "Bottega Veneta Madison", aliases: ["bottega"], type: "shop", vibe: "minimal", rating: 4.6, coords: [40.7697, -73.9659], addr: "740 Madison Ave", area: "UES", instagram: "bottegaveneta", desc: "Couro artesanal; loja sóbria e tátil." },
+  { name: "Goyard", aliases: ["goyard"], type: "shop", vibe: "luxury", rating: 4.6, coords: [40.7659, -73.9698], addr: "20 E 63rd St", area: "UES", instagram: "maisongoyard", desc: "Malas pintadas à mão desde 1853." },
+  { name: "Loro Piana", aliases: ["loro piana"], type: "shop", vibe: "luxury", rating: 4.6, coords: [40.7714, -73.9637], addr: "821 Madison Ave", area: "UES", instagram: "loropiana", desc: "Caxemira italiana; loja com mood biblioteca." },
+  { name: "Brunello Cucinelli", aliases: ["cucinelli"], type: "shop", vibe: "luxury", rating: 4.6, coords: [40.7672, -73.9709], addr: "683 Madison Ave", area: "UES", instagram: "brunellocucinelli", desc: "Knitwear Solomeo; estética rural italiana." },
+  { name: "Bonpoint Madison", aliases: ["bonpoint"], type: "shop", vibe: "classic", rating: 4.5, coords: [40.7790, -73.9601], addr: "1269 Madison Ave", area: "UES", instagram: "bonpoint", desc: "Roupas infantis francesas; townhouse charmosa." },
+
+  // ===== Lojas — concept stores e marcas alfa =====
+  { name: "Dover Street Market NY", aliases: ["dsm", "dover street"], type: "shop", vibe: "concept", rating: 4.5, coords: [40.7445, -73.9810], addr: "160 Lexington Ave", area: "Murray Hill", instagram: "doverstreetmarketnewyork", desc: "Multi-marca de Rei Kawakubo (Comme des Garçons)." },
+  { name: "Kith SoHo", aliases: ["kith"], type: "shop", vibe: "concept", rating: 4.6, coords: [40.7244, -73.9952], addr: "337 Lafayette St", area: "NoLita", instagram: "kith", desc: "Streetwear flagship; café de cereal embutido." },
+  { name: "Supreme NY", aliases: ["supreme"], type: "shop", vibe: "iconic", rating: 4.5, coords: [40.7222, -73.9930], addr: "190 Bowery", area: "Bowery", instagram: "supremenewyork", desc: "Skate brand cult; fila eterna no drop." },
+  { name: "Glossier SoHo", aliases: ["glossier"], type: "shop", vibe: "playful", rating: 4.5, coords: [40.7257, -73.9988], addr: "72 Spring St", area: "SoHo", instagram: "glossier", desc: "Pink Paradise; espelhos rosados, beleza minimal." },
+  { name: "Aesop Howard", aliases: ["aesop howard"], type: "shop", vibe: "minimal", rating: 4.7, coords: [40.7195, -74.0007], addr: "25 Howard St", area: "SoHo", instagram: "aesopskincare", desc: "Tacklebox; tijolos e madeira escura — perfumaria." },
+  { name: "Aesop Madison", aliases: ["aesop madison"], type: "shop", vibe: "minimal", rating: 4.7, coords: [40.7794, -73.9613], addr: "1100 Madison Ave", area: "UES", instagram: "aesopskincare", desc: "Estante de cera e luz dourada." },
+  { name: "Aesop Williamsburg", aliases: ["aesop wmb"], type: "shop", vibe: "minimal", rating: 4.7, coords: [40.7185, -73.9572], addr: "196 N 11th St", area: "Williamsburg", instagram: "aesopskincare", desc: "Concreto polido e madeira queimada." },
+  { name: "Le Labo Nolita", aliases: ["le labo nolita"], type: "shop", vibe: "indie", rating: 4.7, coords: [40.7233, -73.9942], addr: "233 Elizabeth St", area: "NoLita", instagram: "lelabofragrances", desc: "Perfumaria sob encomenda; rótulo manuscrito." },
+  { name: "Le Labo Williamsburg", aliases: ["le labo wmb"], type: "shop", vibe: "indie", rating: 4.6, coords: [40.7184, -73.9574], addr: "184 N 6th St", area: "Williamsburg", instagram: "lelabofragrances", desc: "Loft industrial com bar de fragrâncias." },
+  { name: "Diptyque West Village", aliases: ["diptyque"], type: "shop", vibe: "classic", rating: 4.6, coords: [40.7355, -74.0050], addr: "377 Bleecker St", area: "West Village", instagram: "diptyque", desc: "Velas parisienses 1961; vitrine artística." },
+  { name: "Byredo SoHo", aliases: ["byredo"], type: "shop", vibe: "minimal", rating: 4.6, coords: [40.7227, -74.0024], addr: "92 Greene St", area: "SoHo", instagram: "byredo", desc: "Perfumaria sueca; arquitetura nórdica nua." },
+  { name: "Acne Studios SoHo", aliases: ["acne"], type: "shop", vibe: "modernist", rating: 4.5, coords: [40.7196, -74.0017], addr: "33 Greene St", area: "SoHo", instagram: "acnestudios", desc: "Suecos; carpete pink e luz neon." },
+  { name: "Comme des Garçons", aliases: ["cdg"], type: "shop", vibe: "concept", rating: 4.5, coords: [40.7474, -74.0046], addr: "520 W 22nd St", area: "Chelsea", instagram: "commedesgarcons", desc: "Túnel de alumínio assinado por Future Systems." },
+  { name: "Reformation SoHo", aliases: ["reformation"], type: "shop", vibe: "modernist", rating: 4.4, coords: [40.7203, -74.0019], addr: "23 Howard St", area: "SoHo", instagram: "reformation", desc: "Sustainable fashion; provadores high-tech." },
+  { name: "The Apartment by The Line", aliases: ["the line"], type: "shop", vibe: "concept", rating: 4.6, coords: [40.7224, -74.0029], addr: "76 Greene St 3F", area: "SoHo", instagram: "the_line", desc: "Apartamento curado; tudo à venda, vibe lar." },
+  { name: "Coming Soon", aliases: ["coming soon"], type: "shop", vibe: "indie", rating: 4.6, coords: [40.7167, -73.9905], addr: "37 Orchard St", area: "LES", instagram: "comingsoonnewyork", desc: "Design pós-Memphis colorido; mood maximalista." },
+
+  // ===== Lojas — livrarias lendárias =====
+  { name: "Strand Bookstore", aliases: ["strand"], type: "shop", vibe: "historic", rating: 4.8, coords: [40.7333, -73.9907], addr: "828 Broadway", area: "Union Sq", instagram: "strandbookstore", desc: "18 milhas de livros desde 1927; sacolas cult." },
+  { name: "McNally Jackson SoHo", aliases: ["mcnally jackson"], type: "shop", vibe: "indie", rating: 4.7, coords: [40.7237, -73.9952], addr: "134 Prince St", area: "SoHo", instagram: "mcnallyjackson", desc: "Indie carinhosa; café e seções por país." },
+  { name: "McNally Jackson Williamsburg", aliases: ["mcnally wmb"], type: "shop", vibe: "indie", rating: 4.7, coords: [40.7141, -73.9627], addr: "76 N 4th St", area: "Williamsburg", instagram: "mcnallyjackson", desc: "Filial Brooklyn ampla." },
+  { name: "Rizzoli Bookstore", aliases: ["rizzoli"], type: "shop", vibe: "luxury", rating: 4.7, coords: [40.7446, -73.9897], addr: "1133 Broadway", area: "NoMad", instagram: "rizzolibookstoreny", desc: "Arte e arquitetura em prédio histórico; mood biblioteca italiana." },
+  { name: "Albertine Books", aliases: ["albertine"], type: "shop", vibe: "luxury", rating: 4.8, coords: [40.7747, -73.9636], addr: "972 5th Ave", area: "UES", instagram: "albertinebooks", desc: "Cultural Services do French Embassy; teto pintado a céu." },
+  { name: "Books are Magic", aliases: ["books are magic"], type: "shop", vibe: "indie", rating: 4.8, coords: [40.6845, -73.9974], addr: "225 Smith St", area: "Cobble Hill (BK)", instagram: "booksaremagicbk", desc: "Indie Brooklyn; mural pink fotogênico." },
+  { name: "Three Lives & Company", aliases: ["three lives"], type: "shop", vibe: "historic", rating: 4.8, coords: [40.7335, -74.0023], addr: "154 W 10th St", area: "West Village", instagram: "threelivesbooks", desc: "Esquina charmosa desde 1968; curadoria literária." },
+  { name: "Idlewild Books", aliases: ["idlewild"], type: "shop", vibe: "indie", rating: 4.7, coords: [40.7387, -73.9985], addr: "170 7th Ave S", area: "West Village", instagram: "idlewildbooks", desc: "Livraria de viagem e idiomas." },
+  { name: "Goods for the Study", aliases: ["goods for the study"], type: "shop", vibe: "minimal", rating: 4.6, coords: [40.7325, -73.9985], addr: "50 W 8th St", area: "Greenwich Village", instagram: "goodsforthestudy", desc: "Papelaria curada do McNally Jackson." },
+  { name: "Printed Matter", aliases: ["printed matter"], type: "shop", vibe: "indie", rating: 4.7, coords: [40.7510, -74.0058], addr: "231 11th Ave", area: "Chelsea", instagram: "printedmatterinc", desc: "Livros de artista; epicentro do art book." },
+  { name: "192 Books", aliases: ["192 books"], type: "shop", vibe: "minimal", rating: 4.6, coords: [40.7459, -74.0048], addr: "192 10th Ave", area: "Chelsea", instagram: "192books", desc: "Indie chic ao lado de galerias." },
+  { name: "Greenlight Bookstore", aliases: ["greenlight"], type: "shop", vibe: "indie", rating: 4.7, coords: [40.6868, -73.9740], addr: "686 Fulton St", area: "Fort Greene (BK)", instagram: "greenlightbklyn", desc: "Indie Brooklyn comunitária." },
+  { name: "Powerhouse Arena", aliases: ["powerhouse"], type: "shop", vibe: "concept", rating: 4.6, coords: [40.7030, -73.9893], addr: "28 Adams St", area: "DUMBO (BK)", instagram: "powerhousearena", desc: "Arena dupla pé-direito; eventos literários." },
+
+  // ===== Lojas — home & decor =====
+  { name: "ABC Carpet & Home", aliases: ["abc carpet"], type: "shop", vibe: "iconic", rating: 4.6, coords: [40.7375, -73.9905], addr: "888 Broadway", area: "Flatiron", instagram: "abccarpethome", desc: "6 andares de tapetes, móveis e bohemia." },
+  { name: "John Derian Company", aliases: ["john derian"], type: "shop", vibe: "vintage", rating: 4.8, coords: [40.7250, -73.9912], addr: "6 E 2nd St", area: "East Village", instagram: "johnderiancompany", desc: "Decoupage cult; loja-museu antiguidades." },
+  { name: "Roman and Williams Guild", aliases: ["roman williams", "rw guild"], type: "shop", vibe: "minimal", rating: 4.7, coords: [40.7199, -74.0008], addr: "53 Howard St", area: "SoHo", instagram: "rwguild", desc: "Casa e mesa em galeria; café La Mercerie no fundo." },
+  { name: "MoMA Design Store SoHo", aliases: ["moma soho"], type: "shop", vibe: "modernist", rating: 4.6, coords: [40.7234, -73.9974], addr: "81 Spring St", area: "SoHo", instagram: "momadesignstore", desc: "Design industrial selecionado pelo museu." },
+  { name: "MoMA Design Store 53rd", aliases: ["moma 53"], type: "shop", vibe: "modernist", rating: 4.6, coords: [40.7615, -73.9776], addr: "44 W 53rd St", area: "Midtown", instagram: "momadesignstore", desc: "Flagship em frente ao museu." },
+  { name: "Fishs Eddy", aliases: ["fishs eddy"], type: "shop", vibe: "playful", rating: 4.6, coords: [40.7376, -73.9893], addr: "889 Broadway", area: "Flatiron", instagram: "fishseddy", desc: "Louça vintage e prints NYC originais." },
+  { name: "John Robshaw Textiles", aliases: ["john robshaw"], type: "shop", vibe: "indie", rating: 4.7, coords: [40.7493, -73.9942], addr: "245 W 29th St", area: "Chelsea", instagram: "johnrobshaw", desc: "Block-print indiano artesanal." },
+  { name: "Atelier Courbet", aliases: ["courbet"], type: "shop", vibe: "minimal", rating: 4.7, coords: [40.7224, -73.9947], addr: "175 Mott St", area: "NoLita", instagram: "ateliercourbet", desc: "Galeria-loja de design colecionável." },
+  { name: "Catbird", aliases: ["catbird"], type: "shop", vibe: "indie", rating: 4.7, coords: [40.7167, -73.9612], addr: "219 Bedford Ave", area: "Williamsburg (BK)", instagram: "catbirdnyc", desc: "Joalheria delicada cult; engagement rings indie." },
+
+  // ===== Lojas — especialidade e icônicas =====
+  { name: "FAO Schwarz", aliases: ["fao"], type: "shop", vibe: "iconic", rating: 4.5, coords: [40.7585, -73.9787], addr: "30 Rockefeller Plaza", area: "Midtown", instagram: "faoschwarz", desc: "Loja de brinquedos lendária; piano gigante 'Big'." },
+  { name: "Lego Store Fifth Avenue", aliases: ["lego 5th"], type: "shop", vibe: "playful", rating: 4.7, coords: [40.7588, -73.9779], addr: "620 5th Ave", area: "Midtown", instagram: "legonyc", desc: "Esculturas LEGO NYC em escala; maquete da Rockefeller." },
+  { name: "Nintendo NY", aliases: ["nintendo"], type: "shop", vibe: "playful", rating: 4.6, coords: [40.7588, -73.9787], addr: "10 Rockefeller Plaza", area: "Midtown", instagram: "nintendonyc", desc: "Mario gigante, demos de console, museu Nintendo." },
+  { name: "Mast Brothers Chocolate", aliases: ["mast"], type: "shop", vibe: "indie", rating: 4.4, coords: [40.7173, -73.9583], addr: "111 N 3rd St", area: "Williamsburg (BK)", instagram: "mastbrothers", desc: "Bean-to-bar artesanal; embalagem cult." },
+  { name: "C.O. Bigelow Apothecary", aliases: ["bigelow"], type: "shop", vibe: "historic", rating: 4.7, coords: [40.7344, -73.9991], addr: "414 6th Ave", area: "Greenwich Village", instagram: "cobigelow", desc: "Farmácia mais antiga dos EUA (1838); estantes vitorianas." },
+  { name: "Casey Rubber Stamps", aliases: ["casey stamps"], type: "shop", vibe: "vintage", rating: 4.8, coords: [40.7308, -73.9849], addr: "322 E 11th St", area: "East Village", instagram: "caseyrubberstamps", desc: "Estampas customizadas; cubículo cheio até o teto." },
+  { name: "Wing on Wo", aliases: ["wing on wo"], type: "shop", vibe: "historic", rating: 4.8, coords: [40.7152, -73.9974], addr: "26 Mott St", area: "Chinatown", instagram: "wingonwoandco", desc: "Porcelana chinesa desde 1890; legacy de Chinatown." },
+  { name: "Toy Tokyo", aliases: ["toy tokyo"], type: "shop", vibe: "playful", rating: 4.7, coords: [40.7261, -73.9883], addr: "91 2nd Ave", area: "East Village", instagram: "toytokyo", desc: "Designer toys japoneses, vinyl figures, raridades." },
+  { name: "M&M's World", aliases: ["mms"], type: "shop", vibe: "playful", rating: 4.4, coords: [40.7589, -73.9851], addr: "1600 Broadway", area: "Times Sq", instagram: "mmschocolate", desc: "Parede gigante de M&Ms personalizáveis." },
+  { name: "Rough Trade NY", aliases: ["rough trade"], type: "shop", vibe: "indie", rating: 4.7, coords: [40.7589, -73.9787], addr: "30 Rockefeller Plaza", area: "Midtown", instagram: "roughtradenyc", desc: "Indie record store; shows ao vivo." },
+  { name: "The Met Store", aliases: ["met store"], type: "shop", vibe: "classic", rating: 4.6, coords: [40.7794, -73.9633], addr: "1000 5th Ave", area: "UES", instagram: "metmuseum", desc: "Souvenirs e arte do Metropolitan Museum." },
+
+  // ===== Lojas — food + decor crossover =====
+  { name: "Eataly Flatiron", aliases: ["eataly flatiron"], type: "shop", vibe: "iconic", rating: 4.6, coords: [40.7421, -73.9893], addr: "200 5th Ave", area: "Flatiron", instagram: "eatalyusa", desc: "Mercado italiano premium; cafés e restaurantes embutidos." },
+  { name: "Eataly Downtown", aliases: ["eataly downtown"], type: "shop", vibe: "modernist", rating: 4.6, coords: [40.7113, -74.0123], addr: "101 Liberty St", area: "FiDi", instagram: "eatalyusa", desc: "WTC; vista do mercado pra Oculus." },
+  { name: "Murray's Cheese Shop", aliases: ["murrays cheese"], type: "shop", vibe: "historic", rating: 4.7, coords: [40.7314, -74.0034], addr: "254 Bleecker St", area: "West Village", instagram: "murrayscheese", desc: "Queijaria cult desde 1940; degustação." }
 ];
 
 const presets = {
@@ -1237,7 +1351,7 @@ let currentFilter = "all";
 let currentSort = "rating";
 let currentCenter = null;
 let centerType = null;
-const ALL_TYPES = ['hotel', 'cafe', 'bakery', 'restaurant'];
+const ALL_TYPES = ['hotel', 'cafe', 'bakery', 'restaurant', 'shop'];
 let activeFilters = new Set(ALL_TYPES);
 let focusedItem = null;
 
@@ -1685,6 +1799,7 @@ function renderPlaceCard(container, r, idx) {
   if (r.type === "cafe") typeBadge = `<span class="badge cafe">Café</span>`;
   else if (r.type === "bakery") typeBadge = `<span class="badge bakery">Bakery</span>`;
   else if (r.type === "restaurant") typeBadge = `<span class="badge restaurant">Restaurante</span>`;
+  else if (r.type === "shop") typeBadge = `<span class="badge shop">Loja</span>`;
   else typeBadge = `<span class="badge hotel">${r.curated ? r.curated.stars + '★' : 'Hotel'}</span>`;
   const distBadge = `<span class="badge distance">${fmtKm(r.distance)} · ${walkMin(r.distance)} min</span>`;
   let ratingBadge = '';
@@ -1708,14 +1823,28 @@ function renderPlaceCard(container, r, idx) {
     const c = formatCuisine(r.cuisine);
     if (c) cuisineBadge = `<span class="badge cuisine">${c}</span>`;
   }
+  let vibeBadge = '';
+  if (r.type === "shop" && r.vibe) {
+    const vibeMap = { luxury: 'Luxo', concept: 'Concept', iconic: 'Icônica', minimal: 'Minimalista', vintage: 'Vintage', historic: 'Histórica', indie: 'Indie', playful: 'Lúdica', modernist: 'Modernista', classic: 'Clássica' };
+    vibeBadge = `<span class="badge vibe">${vibeMap[r.vibe] || r.vibe}</span>`;
+  }
   const descHtml = (r.curated && r.curated.desc) ? `<div class="place-desc">"${r.curated.desc}"</div>` : (r.desc ? `<div class="place-desc">"${r.desc}"</div>` : '');
   const addrText = r.address || (r.curated ? r.curated.addr : '');
-  const areaText = (r.type === "hotel" && r.curated) ? ` · ${r.curated.area}` : '';
+  const areaText = (r.type === "hotel" && r.curated) ? ` · ${r.curated.area}` : ((r.type === "shop" && r.curated && r.curated.area) ? ` · ${r.curated.area}` : '');
   const addrHtml = addrText ? `<div class="place-meta">${addrText}${areaText}</div>` : '';
-  const bookingLink = r.type === "hotel" ? `<a href="https://www.booking.com/searchresults.html?ss=${encodeURIComponent(r.name + ' New York')}" target="_blank">🏨 Booking</a>` : '';
-  const googleLink = `<a href="https://www.google.com/search?q=${encodeURIComponent(r.name + ' New York')}" target="_blank">🔍 Google</a>`;
-  const dirLink = `<a href="https://www.google.com/maps/dir/${currentCenter.coords[0]},${currentCenter.coords[1]}/${r.coords[0]},${r.coords[1]}" target="_blank">🗺️ Direções</a>`;
-  card.innerHTML = `<div class="place-name">${idx}. ${r.name}</div>${addrHtml}<div class="badge-row">${typeBadge}${cuisineBadge}${ratingBadge}${priceBadge}${distBadge}</div>${descHtml}<div class="place-links">${bookingLink}${googleLink}${dirLink}</div>`;
+  // Hero photo (se houver) OU monogram pra lojas curadas sem foto
+  let heroHtml = '';
+  if (r.photo) {
+    heroHtml = `<img class="place-photo" src="${r.photo}" alt="${r.name}" loading="lazy" onerror="this.style.display='none'"/>`;
+  } else if (r.type === 'shop' && r.curated) {
+    const initial = (r.name || '?').replace(/^The\s+/i, '').charAt(0).toUpperCase();
+    heroHtml = `<div class="place-monogram">${initial}</div>`;
+  }
+  const bookingLink = r.type === "hotel" ? `<a href="https://www.booking.com/searchresults.html?ss=${encodeURIComponent(r.name + ' New York')}" target="_blank">Booking</a>` : '';
+  const instagramLink = r.instagram ? `<a class="place-instagram" href="https://instagram.com/${r.instagram}" target="_blank"><svg class="icon"><use href="#i-instagram"/></svg>@${r.instagram}</a>` : '';
+  const googleLink = `<a href="https://www.google.com/search?q=${encodeURIComponent(r.name + ' New York')}" target="_blank">Google</a>`;
+  const dirLink = `<a href="https://www.google.com/maps/dir/${currentCenter.coords[0]},${currentCenter.coords[1]}/${r.coords[0]},${r.coords[1]}" target="_blank">Direções</a>`;
+  card.innerHTML = `${heroHtml}<div class="place-name">${idx}. ${r.name}</div>${addrHtml}<div class="badge-row">${typeBadge}${cuisineBadge}${vibeBadge}${ratingBadge}${priceBadge}${distBadge}</div>${descHtml}<div class="place-links">${instagramLink}${bookingLink}${googleLink}${dirLink}</div>`;
   card.addEventListener('click', (e) => {
     if (e.target.tagName === 'A' || e.target.tagName === 'BUTTON') return;
     focusOnPlace(r);
