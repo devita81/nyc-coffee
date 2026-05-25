@@ -1986,12 +1986,22 @@ function renderPlaceCard(container, r, idx) {
   const addrText = r.address || (r.curated ? r.curated.addr : '');
   const areaText = (r.type === "hotel" && r.curated) ? ` · ${r.curated.area}` : ((r.type === "shop" && r.curated && r.curated.area) ? ` · ${r.curated.area}` : '');
   const addrHtml = addrText ? `<div class="place-meta">${addrText}${areaText}</div>` : '';
-  // Hero: r.photo manual (URL curado) > monogram editorial
-  // Removidos: Wikipedia auto-fetch (logos pixelados) e favicon (baixa-res esticada).
-  // Monogram dourado em fundo verde-escuro fica consistente e premium.
+  // Hero: r.photo manual > photo hospedada em /photos/lojas/{slug}.jpg > monogram
   let heroHtml = '';
-  if (r.photo) {
-    heroHtml = `<img class="place-photo" src="${r.photo}" alt="${r.name}" loading="lazy" onerror="this.style.display='none'"/>`;
+  let photoUrl = r.photo;
+  if (!photoUrl && r.type === 'shop' && r.curated) {
+    const slug = (r.name || '').toLowerCase()
+      .normalize('NFD').replace(/[̀-ͯ]/g, '')
+      .replace(/&/g, 'and')
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '');
+    photoUrl = `photos/lojas/${slug}.jpg`;
+  }
+  if (photoUrl) {
+    const initial = (r.name || '?').replace(/^The\s+/i, '').charAt(0).toUpperCase();
+    const safeName = (r.name || '').replace(/"/g, '&quot;');
+    // onerror: se a foto nao existir (404), substitui pelo monogram inline
+    heroHtml = `<img class="place-photo" src="${photoUrl}" alt="${r.name}" loading="lazy" onerror="this.outerHTML='<div class=&quot;place-monogram&quot; data-shop-monogram=&quot;${safeName}&quot;>${initial}</div>';"/>`;
   } else if (r.type === 'shop' && r.curated) {
     const initial = (r.name || '?').replace(/^The\s+/i, '').charAt(0).toUpperCase();
     const safeName = (r.name || '').replace(/"/g, '&quot;');

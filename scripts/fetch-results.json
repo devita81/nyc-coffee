@@ -1,0 +1,403 @@
+[
+  {
+    "name": "Apple Fifth Avenue",
+    "slug": "apple-fifth-avenue",
+    "status": "downloaded",
+    "yelp_match": "Apple Fifth Avenue"
+  },
+  {
+    "name": "Apple SoHo",
+    "slug": "apple-soho",
+    "status": "downloaded",
+    "yelp_match": "Apple Soho"
+  },
+  {
+    "name": "Tiffany & Co Landmark",
+    "slug": "tiffany-and-co-landmark",
+    "status": "no_image",
+    "yelp_match": "Fairfield Partners"
+  },
+  {
+    "name": "Bergdorf Goodman",
+    "slug": "bergdorf-goodman",
+    "status": "downloaded",
+    "yelp_match": "Bergdorf Goodman"
+  },
+  {
+    "name": "Saks Fifth Avenue",
+    "slug": "saks-fifth-avenue",
+    "status": "downloaded",
+    "yelp_match": "Saks Fifth Avenue"
+  },
+  {
+    "name": "Bloomingdale's 59th",
+    "slug": "bloomingdale-s-59th",
+    "status": "downloaded",
+    "yelp_match": "Christian Louboutin - Bloomingdales"
+  },
+  {
+    "name": "Macy's Herald Square",
+    "slug": "macy-s-herald-square",
+    "status": "downloaded",
+    "yelp_match": "Toys R Us"
+  },
+  {
+    "name": "Cartier Mansion",
+    "slug": "cartier-mansion",
+    "status": "downloaded",
+    "yelp_match": "Cartier Fifth Avenue Mansion"
+  },
+  {
+    "name": "Louis Vuitton Maison NY",
+    "slug": "louis-vuitton-maison-ny",
+    "status": "no_image",
+    "yelp_match": "A & S Realty"
+  },
+  {
+    "name": "Hermès Madison",
+    "slug": "hermes-madison",
+    "status": "downloaded",
+    "yelp_match": "Hermes"
+  },
+  {
+    "name": "Bottega Veneta Madison",
+    "slug": "bottega-veneta-madison",
+    "status": "downloaded",
+    "yelp_match": "Bottega Veneta"
+  },
+  {
+    "name": "Goyard",
+    "slug": "goyard",
+    "status": "downloaded",
+    "yelp_match": "Maison Goyard"
+  },
+  {
+    "name": "Loro Piana",
+    "slug": "loro-piana",
+    "status": "downloaded",
+    "yelp_match": "Peter Elliot Blue"
+  },
+  {
+    "name": "Brunello Cucinelli",
+    "slug": "brunello-cucinelli",
+    "status": "downloaded",
+    "yelp_match": "Brunello Cucinelli"
+  },
+  {
+    "name": "Bonpoint Madison",
+    "slug": "bonpoint-madison",
+    "status": "downloaded",
+    "yelp_match": "Sean"
+  },
+  {
+    "name": "Dover Street Market NY",
+    "slug": "dover-street-market-ny",
+    "status": "downloaded",
+    "yelp_match": "Lexington Parc Condominium"
+  },
+  {
+    "name": "Kith SoHo",
+    "slug": "kith-soho",
+    "status": "no_image",
+    "yelp_match": "Isobel Arnberg"
+  },
+  {
+    "name": "Supreme NY",
+    "slug": "supreme-ny",
+    "status": "downloaded",
+    "yelp_match": "Hester Street Cafe"
+  },
+  {
+    "name": "Glossier SoHo",
+    "slug": "glossier-soho",
+    "status": "downloaded",
+    "yelp_match": "Betsey Johnson"
+  },
+  {
+    "name": "Aesop Howard",
+    "slug": "aesop-howard",
+    "status": "downloaded",
+    "yelp_match": "L'AGENT NOIR"
+  },
+  {
+    "name": "Aesop Madison",
+    "slug": "aesop-madison",
+    "status": "downloaded",
+    "yelp_match": "Aesop Madison Avenue"
+  },
+  {
+    "name": "Aesop Williamsburg",
+    "slug": "aesop-williamsburg",
+    "status": "downloaded",
+    "yelp_match": "Brooklyn Woke Vintage"
+  },
+  {
+    "name": "Le Labo Nolita",
+    "slug": "le-labo-nolita",
+    "status": "downloaded",
+    "yelp_match": "LE LABO NEW YORK CITY - NOLITA"
+  },
+  {
+    "name": "Le Labo Williamsburg",
+    "slug": "le-labo-williamsburg",
+    "status": "downloaded",
+    "yelp_match": "Le Labo"
+  },
+  {
+    "name": "Diptyque West Village",
+    "slug": "diptyque-west-village",
+    "status": "downloaded",
+    "yelp_match": "Lele Sadoughi"
+  },
+  {
+    "name": "Byredo SoHo",
+    "slug": "byredo-soho",
+    "status": "downloaded",
+    "yelp_match": "BYREDO New York Soho"
+  },
+  {
+    "name": "Acne Studios SoHo",
+    "slug": "acne-studios-soho",
+    "status": "downloaded",
+    "yelp_match": "Acne Studios"
+  },
+  {
+    "name": "Comme des Garçons",
+    "slug": "comme-des-garcons",
+    "status": "downloaded",
+    "yelp_match": "Comme Des Garçons"
+  },
+  {
+    "name": "Reformation SoHo",
+    "slug": "reformation-soho",
+    "status": "no_image",
+    "yelp_match": "Roag"
+  },
+  {
+    "name": "The Apartment by The Line",
+    "slug": "the-apartment-by-the-line",
+    "status": "no_image",
+    "yelp_match": "480 Broome St Apt"
+  },
+  {
+    "name": "Coming Soon",
+    "slug": "coming-soon",
+    "status": "downloaded",
+    "yelp_match": "Coming Soon"
+  },
+  {
+    "name": "Strand Bookstore",
+    "slug": "strand-bookstore",
+    "status": "downloaded",
+    "yelp_match": "Strand Bookstore"
+  },
+  {
+    "name": "McNally Jackson SoHo",
+    "slug": "mcnally-jackson-soho",
+    "status": "downloaded",
+    "yelp_match": "McNally Jackson Store"
+  },
+  {
+    "name": "McNally Jackson Williamsburg",
+    "slug": "mcnally-jackson-williamsburg",
+    "status": "no_image",
+    "yelp_match": "Fara Mcpherson Fine Art"
+  },
+  {
+    "name": "Rizzoli Bookstore",
+    "slug": "rizzoli-bookstore",
+    "status": "downloaded",
+    "yelp_match": "Rizzoli Bookstore"
+  },
+  {
+    "name": "Albertine Books",
+    "slug": "albertine-books",
+    "status": "downloaded",
+    "yelp_match": "Albertine Books in French and English"
+  },
+  {
+    "name": "Books are Magic",
+    "slug": "books-are-magic",
+    "status": "not_found"
+  },
+  {
+    "name": "Three Lives & Company",
+    "slug": "three-lives-and-company",
+    "status": "downloaded",
+    "yelp_match": "Three Lives & Company"
+  },
+  {
+    "name": "Idlewild Books",
+    "slug": "idlewild-books",
+    "status": "downloaded",
+    "yelp_match": "Rudolf Steiner Bookstore"
+  },
+  {
+    "name": "Goods for the Study",
+    "slug": "goods-for-the-study",
+    "status": "downloaded",
+    "yelp_match": "Goods for the Study"
+  },
+  {
+    "name": "Printed Matter",
+    "slug": "printed-matter",
+    "status": "downloaded",
+    "yelp_match": "Printed Matter"
+  },
+  {
+    "name": "192 Books",
+    "slug": "192-books",
+    "status": "downloaded",
+    "yelp_match": "192 Books"
+  },
+  {
+    "name": "Greenlight Bookstore",
+    "slug": "greenlight-bookstore",
+    "status": "downloaded",
+    "yelp_match": "Greenlight Bookstore"
+  },
+  {
+    "name": "Powerhouse Arena",
+    "slug": "powerhouse-arena",
+    "status": "downloaded",
+    "yelp_match": "The Powerhouse Arena"
+  },
+  {
+    "name": "ABC Carpet & Home",
+    "slug": "abc-carpet-and-home",
+    "status": "downloaded",
+    "yelp_match": "abc carpet & home"
+  },
+  {
+    "name": "John Derian Company",
+    "slug": "john-derian-company",
+    "status": "downloaded",
+    "yelp_match": "Montana Knox"
+  },
+  {
+    "name": "Roman and Williams Guild",
+    "slug": "roman-and-williams-guild",
+    "status": "downloaded",
+    "yelp_match": "Roman and Williams Guild"
+  },
+  {
+    "name": "MoMA Design Store SoHo",
+    "slug": "moma-design-store-soho",
+    "status": "downloaded",
+    "yelp_match": "MoMA Design Store-Soho"
+  },
+  {
+    "name": "MoMA Design Store 53rd",
+    "slug": "moma-design-store-53rd",
+    "status": "downloaded",
+    "yelp_match": "MoMA Design Store"
+  },
+  {
+    "name": "Fishs Eddy",
+    "slug": "fishs-eddy",
+    "status": "downloaded",
+    "yelp_match": "Fishs Eddy"
+  },
+  {
+    "name": "John Robshaw Textiles",
+    "slug": "john-robshaw-textiles",
+    "status": "no_image",
+    "yelp_match": "John Robshaw Textiles"
+  },
+  {
+    "name": "Atelier Courbet",
+    "slug": "atelier-courbet",
+    "status": "downloaded",
+    "yelp_match": "Elizabeth Street Gallery"
+  },
+  {
+    "name": "Catbird",
+    "slug": "catbird",
+    "status": "downloaded",
+    "yelp_match": "Catbird - Brooklyn"
+  },
+  {
+    "name": "FAO Schwarz",
+    "slug": "fao-schwarz",
+    "status": "downloaded",
+    "yelp_match": "FAO Schwarz"
+  },
+  {
+    "name": "Lego Store Fifth Avenue",
+    "slug": "lego-store-fifth-avenue",
+    "status": "no_image",
+    "yelp_match": "Backner Burton"
+  },
+  {
+    "name": "Nintendo NY",
+    "slug": "nintendo-ny",
+    "status": "downloaded",
+    "yelp_match": "Nintendo NY"
+  },
+  {
+    "name": "Mast Brothers Chocolate",
+    "slug": "mast-brothers-chocolate",
+    "status": "no_image",
+    "yelp_match": "Small Giants"
+  },
+  {
+    "name": "C.O. Bigelow Apothecary",
+    "slug": "c-o-bigelow-apothecary",
+    "status": "downloaded",
+    "yelp_match": "CO Bigelow Apothecaries"
+  },
+  {
+    "name": "Casey Rubber Stamps",
+    "slug": "casey-rubber-stamps",
+    "status": "downloaded",
+    "yelp_match": "Casey Rubber Stamps"
+  },
+  {
+    "name": "Wing on Wo",
+    "slug": "wing-on-wo",
+    "status": "downloaded",
+    "yelp_match": "Wing On Wo & Co"
+  },
+  {
+    "name": "Toy Tokyo",
+    "slug": "toy-tokyo",
+    "status": "downloaded",
+    "yelp_match": "Toy Tokyo"
+  },
+  {
+    "name": "M&M's World",
+    "slug": "mandm-s-world",
+    "status": "no_image",
+    "yelp_match": "Mvmc Paramount Electronics"
+  },
+  {
+    "name": "Rough Trade NY",
+    "slug": "rough-trade-ny",
+    "status": "no_image",
+    "yelp_match": "Coridel Capital Partners"
+  },
+  {
+    "name": "The Met Store",
+    "slug": "the-met-store",
+    "status": "downloaded",
+    "yelp_match": "The Metropolitan Museum of Art"
+  },
+  {
+    "name": "Eataly Flatiron",
+    "slug": "eataly-flatiron",
+    "status": "downloaded",
+    "yelp_match": "Eataly - Flatiron"
+  },
+  {
+    "name": "Eataly Downtown",
+    "slug": "eataly-downtown",
+    "status": "downloaded",
+    "yelp_match": "Eataly NYC Downtown"
+  },
+  {
+    "name": "Murray's Cheese Shop",
+    "slug": "murray-s-cheese-shop",
+    "status": "downloaded",
+    "yelp_match": "Murray's Cheese - Bleecker"
+  }
+]
