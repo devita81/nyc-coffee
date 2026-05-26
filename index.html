@@ -507,6 +507,67 @@
   .map-fullscreen-close .icon { width: 20px; height: 20px; stroke-width: 2.2; }
   body.map-fullscreen-active .bottom-nav { display: none; }
   body.map-fullscreen-active .topbar { display: none; }
+  /* Bottom sheet floating no map fullscreen */
+  .map-bottom-card {
+    position: fixed; left: 0; right: 0; bottom: 0;
+    z-index: 1002;
+    background: white;
+    border-radius: 16px 16px 0 0;
+    padding: 14px 16px calc(14px + env(safe-area-inset-bottom)) 16px;
+    box-shadow: 0 -10px 40px rgba(0,0,0,0.30);
+    max-height: 50vh;
+    overflow-y: auto;
+    transform: translateY(110%);
+    transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+    display: none;
+  }
+  .map-bottom-card.show { transform: translateY(0); display: block; }
+  .map-bottom-card-handle {
+    width: 36px; height: 4px; border-radius: 999px;
+    background: var(--border); margin: 0 auto 10px;
+  }
+  .map-bottom-card-close {
+    position: absolute; top: 10px; right: 10px;
+    width: 32px; height: 32px; border-radius: 50%;
+    background: var(--green-bg); color: var(--ink-soft);
+    border: 1px solid var(--border);
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+  }
+  .map-bottom-card-close .icon { width: 14px; height: 14px; }
+  .map-bottom-card-photo {
+    width: 100%; aspect-ratio: 16/9; object-fit: cover;
+    border-radius: 10px; margin-bottom: 12px;
+  }
+  .map-bottom-card-name {
+    font-family: var(--font-display);
+    font-size: 18px; font-weight: 500; color: var(--ink);
+    line-height: 1.2; letter-spacing: -0.01em;
+    padding-right: 36px;
+  }
+  .map-bottom-card-meta {
+    font-size: 12px; color: var(--muted); margin-top: 4px;
+    display: flex; gap: 8px; flex-wrap: wrap;
+  }
+  .map-bottom-card-meta .badge { font-size: 11px; padding: 3px 8px; }
+  .map-bottom-card-desc {
+    font-size: 13px; color: var(--ink-soft); margin-top: 10px;
+    line-height: 1.5; font-style: italic;
+  }
+  .map-bottom-card-actions {
+    display: flex; gap: 8px; margin-top: 14px;
+  }
+  .map-bottom-card-btn {
+    flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px;
+    padding: 10px 12px;
+    background: var(--green-bg); color: var(--ink);
+    border: 1px solid var(--border); border-radius: 10px;
+    font-size: 13px; font-weight: 600; cursor: pointer; text-decoration: none;
+    transition: all 0.15s;
+  }
+  .map-bottom-card-btn:hover { border-color: var(--ink-soft); }
+  .map-bottom-card-btn.primary { background: var(--ink); color: white; border-color: var(--ink); }
+  .map-bottom-card-btn.fav.active { background: #fef0f5; color: #d6336c; border-color: #d6336c; }
+  .map-bottom-card-btn .icon { width: 16px; height: 16px; }
   .leaflet-control-zoom a { border-radius: 8px !important; color: var(--purple) !important; font-weight: 700 !important; }
 
   /* Results */
@@ -1037,6 +1098,9 @@
 <button class="map-fullscreen-close" id="mapFullscreenClose" type="button" title="Fechar tela cheia">
   <svg class="icon"><use href="#i-x"/></svg>
 </button>
+
+<!-- Bottom sheet com info do estabelecimento clicado em fullscreen -->
+<div id="mapBottomCard" class="map-bottom-card"></div>
 
 <!-- Bottom nav -->
 <nav class="bottom-nav">
@@ -2324,8 +2388,14 @@ function renderResults() {
     if (r.type === "hotel") popupHtml += `<div class="popup-row"><a href="https://www.booking.com/searchresults.html?ss=${encodeURIComponent(r.name + ' New York')}" target="_blank">Reservar no Booking</a></div>`;
     else popupHtml += `<div class="popup-row"><a href="https://www.google.com/search?q=${encodeURIComponent(r.name + ' New York')}" target="_blank">Ver no Google</a></div>`;
     m.bindPopup(popupHtml);
-    // Click no marker do mapa = mesmo comportamento do click no card
-    m.on('click', () => focusOnPlace(r));
+    // Click no marker: em fullscreen mostra bottom sheet; senao foca normal
+    m.on('click', () => {
+      if (mapEl.classList.contains('fullscreen')) {
+        showMapBottomCard(r);
+      } else {
+        focusOnPlace(r);
+      }
+    });
     activeMarkers.push(m);
   });
 
@@ -2871,11 +2941,81 @@ function setMapFullscreen(on) {
   }, 80);
 }
 mapFullscreenBtn.addEventListener('click', () => setMapFullscreen(true));
-mapFullscreenClose.addEventListener('click', () => setMapFullscreen(false));
+mapFullscreenClose.addEventListener('click', () => { setMapFullscreen(false); hideMapBottomCard(); });
 // ESC sai do fullscreen
 document.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape' && mapEl.classList.contains('fullscreen')) setMapFullscreen(false);
+  if (e.key === 'Escape') {
+    if (document.getElementById('mapBottomCard').classList.contains('show')) hideMapBottomCard();
+    else if (mapEl.classList.contains('fullscreen')) setMapFullscreen(false);
+  }
 });
+
+// ===================== Bottom sheet do fullscreen =====================
+const mapBottomCard = document.getElementById('mapBottomCard');
+function hideMapBottomCard() {
+  mapBottomCard.classList.remove('show');
+  setTimeout(() => { if (!mapBottomCard.classList.contains('show')) mapBottomCard.style.display = 'none'; }, 300);
+}
+function showMapBottomCard(r) {
+  // Origem da rota = userLocation OU centro da busca atual
+  const routeOrigin = userLocation || (currentCenter ? currentCenter.coords : null);
+  const originName = userLocation ? 'Você' : (currentCenter ? currentCenter.name.replace(/^📍\s*|^🏆\s*|^IA:\s*/, '') : null);
+  if (routeOrigin) drawRoute(routeOrigin, r.coords, r.name, originName);
+  // Centra no destino com bounds includindo origem (sem zoom out brusco)
+  if (routeOrigin) {
+    const b = L.latLngBounds([routeOrigin, r.coords]);
+    setTimeout(() => map.fitBounds(b, { padding: [80, 80], maxZoom: 17 }), 300);
+  } else {
+    map.flyTo(r.coords, 16, { duration: 0.4 });
+  }
+
+  const photoHtml = r.photo ? `<img class="map-bottom-card-photo" src="${r.photo}" alt="${(r.name||'').replace(/"/g,'&quot;')}" onerror="this.style.display='none'"/>` : '';
+  const typeLabel = r.type === 'cafe' ? 'Café' : r.type === 'bakery' ? 'Bakery' : r.type === 'restaurant' ? 'Restaurante' : r.type === 'hotel' ? 'Hotel' : 'Loja';
+  const typeClass = r.type === 'cafe' ? 'cafe' : r.type === 'bakery' ? 'bakery' : r.type === 'restaurant' ? 'restaurant' : r.type === 'hotel' ? 'hotel' : 'shop';
+  let ratingHtml = '';
+  if (r.type === 'hotel' && r.curated && r.curated.booking) {
+    ratingHtml = `<span class="badge rating-high">Booking ${r.curated.booking}/10</span>`;
+  } else if (r.rating) {
+    ratingHtml = `<span class="badge rating">⭐ ${r.rating}/5${r.reviewCount ? ` (${r.reviewCount})` : ''}</span>`;
+  }
+  const distHtml = `<span class="badge distance">${fmtKm(r.distance)} · ${walkMin(r.distance)} min</span>`;
+  const aiReason = r._aiReason ? `<div class="ai-reason" style="margin-top:10px">✨ ${r._aiReason}</div>` : '';
+  const baseDesc = (r.curated && r.curated.desc) ? `<div class="map-bottom-card-desc">"${r.curated.desc}"</div>` : (r.desc ? `<div class="map-bottom-card-desc">"${r.desc}"</div>` : '');
+  const safeName = (r.name||'').replace(/</g,'&lt;');
+  const favClass = isFav(r.name) ? 'fav active' : 'fav';
+  const igBtn = r.instagram ? `<a class="map-bottom-card-btn" href="https://instagram.com/${r.instagram}" target="_blank" title="Instagram"><svg class="icon"><use href="#i-instagram"/></svg></a>` : '';
+  const dirHref = routeOrigin
+    ? `https://www.google.com/maps/dir/${routeOrigin[0]},${routeOrigin[1]}/${r.coords[0]},${r.coords[1]}`
+    : `https://www.google.com/maps/search/?api=1&query=${r.coords[0]},${r.coords[1]}`;
+
+  mapBottomCard.innerHTML = `
+    <div class="map-bottom-card-handle"></div>
+    <button class="map-bottom-card-close" id="bottomCardClose" type="button"><svg class="icon"><use href="#i-x"/></svg></button>
+    ${photoHtml}
+    <div class="map-bottom-card-name">${safeName}</div>
+    <div class="map-bottom-card-meta">
+      <span class="badge ${typeClass}">${typeLabel}</span>
+      ${ratingHtml}
+      ${distHtml}
+    </div>
+    ${baseDesc}${aiReason}
+    <div class="map-bottom-card-actions">
+      <button class="map-bottom-card-btn ${favClass}" id="bottomCardFav" type="button"><svg class="icon"><use href="#${isFav(r.name) ? 'i-heart-filled' : 'i-heart'}"/></svg></button>
+      ${igBtn}
+      <a class="map-bottom-card-btn primary" href="${dirHref}" target="_blank">Direções</a>
+    </div>
+  `;
+  mapBottomCard.style.display = 'block';
+  // Forca reflow pra animacao funcionar
+  void mapBottomCard.offsetHeight;
+  mapBottomCard.classList.add('show');
+  document.getElementById('bottomCardClose').onclick = () => hideMapBottomCard();
+  document.getElementById('bottomCardFav').onclick = (e) => {
+    e.stopPropagation();
+    toggleFav(r.name);
+    showMapBottomCard(r); // re-render pra atualizar visual do botao
+  };
+}
 
 // Load saved preference (default: collapsed)
 try {
