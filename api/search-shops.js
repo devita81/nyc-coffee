@@ -10,7 +10,7 @@ export default async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(204).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'POST only' });
 
-  const apiKey = process.env.ANTHROPIC_API_KEY || process.env.NYCagent;
+  let apiKey = (process.env.ANTHROPIC_API_KEY || process.env.NYCagent || '').trim().split(/\s+/)[0];
   if (!apiKey) {
     return res.status(500).json({
       error: 'Configure ANTHROPIC_API_KEY (ou NYCagent) no Vercel > Settings > Environment Variables.'

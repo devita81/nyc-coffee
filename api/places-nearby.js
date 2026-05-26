@@ -10,7 +10,8 @@ export default async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(204).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'POST only' });
 
-  const apiKey = process.env.YELP_API_KEY;
+  // Trim + dedup (caso paste tenha pegado quebras de linha ou copia duplicada)
+  let apiKey = (process.env.YELP_API_KEY || '').trim().split(/\s+/)[0];
   if (!apiKey) {
     return res.status(500).json({ error: 'YELP_API_KEY nao configurada no Vercel.' });
   }
