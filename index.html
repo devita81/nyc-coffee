@@ -707,12 +707,7 @@
     padding: 14px;
     box-shadow: 0 6px 20px rgba(0,0,0,0.25);
   }
-  .place-instagram {
-    display: inline-flex; align-items: center; gap: 6px;
-    color: var(--purple); text-decoration: none; font-weight: 500;
-  }
-  .place-instagram:hover { color: var(--ink); }
-  .place-instagram .icon { width: 14px; height: 14px; }
+  /* (legacy .place-instagram removida — IG agora usa .place-links a.icon-only.ig) */
   .back-link-btn {
     display: inline-flex; align-items: center; gap: 6px;
     background: transparent;
@@ -761,14 +756,27 @@
   .badge.curated { background: var(--purple); color: white; }
   .place-desc { font-size: 12px; color: var(--ink-soft); margin-top: 6px; font-style: italic; line-height: 1.5; }
   .place-links {
-    font-size: 12px; margin-top: 12px; display: flex; gap: 14px; flex-wrap: wrap;
-    padding-top: 10px; border-top: 1px solid var(--border-soft);
+    display: flex; gap: 6px; margin-top: 14px;
+    padding-top: 12px; border-top: 1px solid var(--border-soft);
   }
   .place-links a {
-    color: var(--purple); text-decoration: none; font-weight: 600;
-    padding: 2px 0; transition: color 0.15s;
+    flex: 1;
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    padding: 9px 10px;
+    background: var(--green-bg); color: var(--ink);
+    border: 1px solid var(--border); border-radius: 8px;
+    font-size: 12px; font-weight: 600;
+    text-decoration: none;
+    transition: all 0.15s;
   }
-  .place-links a:hover { color: var(--gold-deep); text-decoration: underline; }
+  .place-links a:hover { border-color: var(--ink-soft); }
+  .place-links a:active { transform: scale(0.97); }
+  .place-links a.primary { background: var(--ink); color: white; border-color: var(--ink); flex: 1.4; }
+  .place-links a.primary:hover { background: var(--purple); border-color: var(--purple); }
+  .place-links a.icon-only { flex: 0 0 auto; padding: 9px 12px; }
+  .place-links a.icon-only.ig { color: #d6336c; }
+  .place-links a.icon-only.ig:hover { background: #fef0f5; border-color: #d6336c; }
+  .place-links a .icon { width: 14px; height: 14px; }
 
   /* About card */
   .about-card h3 { font-family: var(--font-display); font-size: 18px; color: var(--ink); margin-bottom: 10px; font-weight: 600; letter-spacing: -0.01em; }
