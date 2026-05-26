@@ -2265,9 +2265,9 @@ function renderPlaceCard(container, r, idx) {
     heroHtml = `<div class="place-monogram" data-shop-monogram="${safeName}">${initial}</div>`;
   }
   const bookingLink = r.type === "hotel" ? `<a href="https://www.booking.com/searchresults.html?ss=${encodeURIComponent(r.name + ' New York')}" target="_blank">Booking</a>` : '';
-  const instagramLink = r.instagram ? `<a class="place-instagram" href="https://instagram.com/${r.instagram}" target="_blank"><svg class="icon"><use href="#i-instagram"/></svg>@${r.instagram}</a>` : '';
+  const instagramLink = r.instagram ? `<a class="icon-only ig" href="https://instagram.com/${r.instagram}" target="_blank" title="@${r.instagram}"><svg class="icon"><use href="#i-instagram"/></svg></a>` : '';
   const googleLink = `<a href="https://www.google.com/search?q=${encodeURIComponent(r.name + ' New York')}" target="_blank">Google</a>`;
-  const dirLink = `<a href="https://www.google.com/maps/dir/${currentCenter.coords[0]},${currentCenter.coords[1]}/${r.coords[0]},${r.coords[1]}" target="_blank">Direções</a>`;
+  const dirLink = `<a class="primary" href="https://www.google.com/maps/dir/${currentCenter.coords[0]},${currentCenter.coords[1]}/${r.coords[0]},${r.coords[1]}" target="_blank">Direções</a>`;
   const favClass = isFav(r.name) ? 'fav-btn active' : 'fav-btn';
   const heartIcon = isFav(r.name) ? 'i-heart-filled' : 'i-heart';
   const favBtnHtml = `<button class="${favClass}" data-fav-name="${(r.name||'').replace(/"/g,'&quot;')}" title="Favoritar"><svg class="icon"><use href="#${heartIcon}"/></svg></button>`;
