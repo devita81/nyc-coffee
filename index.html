@@ -1917,6 +1917,77 @@ async function fetchNearbyHotelsOSM(coords, r) {
 }
 
 // ===================== Run Search =====================
+// Enriquece resultados via Yelp Fusion (substitui OSM/Overpass que era desatualizado)
+async function enrichWithYelp(coords, r) {
+  try {
+    // So' busca tipos que o usuario quer ver (e que Yelp cobre)
+    const types = ['cafe', 'bakery', 'restaurant'].filter(t => activeFilters.has(t));
+    if (!types.length) return;
+    const res = await fetch('/api/places-nearby', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ lat: coords[0], lng: coords[1], radius: r, types })
+    });
+    if (!res.ok) { console.warn('Yelp enrich falhou:', res.status); return; }
+    const data = await res.json();
+    if (!data.places || !data.places.length) return;
+
+    const seen = new Set();
+    currentResults.forEach(m => seen.add(normalize(m.name)));
+    let added = 0;
+
+    data.places.forEach(p => {
+      // Tenta match com curated por coords + nome
+      const cur = findCuratedPlace({ name: p.name, type: p.type, coords: p.coords });
+      const itemNorm = normalize(p.name);
+      const curNorm = cur ? normalize(cur.name) : null;
+
+      // Se ja' temos esse lugar, patcha cuisine/photo/rating do Yelp in-place
+      const existingNorm = (curNorm && seen.has(curNorm)) ? curNorm : (seen.has(itemNorm) ? itemNorm : null);
+      if (existingNorm) {
+        const existing = currentResults.find(x => normalize(x.name) === existingNorm);
+        if (existing) {
+          if (!existing.cuisine && p.cuisine) { existing.cuisine = p.cuisine; added++; }
+          if (!existing.photo && p.photo) { existing.photo = p.photo; added++; }
+          if (!existing.priceRange && p.priceRange) { existing.priceRange = p.priceRange; added++; }
+          // Atualiza rating se nao tinha
+          if (!existing.rating && p.rating) { existing.rating = p.rating; added++; }
+        }
+        return;
+      }
+      // Novo place: usa dados curados se houver match, senao Yelp puro
+      if (cur) {
+        currentResults.push({
+          ...cur,
+          type: cur.type,
+          distance: dist(coords, cur.coords),
+          curated: cur,
+          rating: cur.rating || p.rating,
+          coords: cur.coords,
+          cuisine: cur.cuisine || p.cuisine,
+          priceRange: cur.priceRange || p.priceRange,
+          photo: cur.photo || p.photo,
+          yelpUrl: p.yelpUrl
+        });
+        seen.add(curNorm);
+      } else {
+        currentResults.push({
+          ...p,
+          distance: dist(coords, p.coords),
+          curated: null,
+          desc: ''
+        });
+        seen.add(itemNorm);
+      }
+      added++;
+    });
+    if (added > 0) renderResults();
+  } catch (e) {
+    console.warn('Yelp enrich erro:', e.message);
+  }
+}
+
+// Mantido como fallback caso Yelp falhe (nao mais chamado por padrao)
 async function enrichWithOSM(coords, r) {
   // Faz UMA query Overpass combinada (hoteis + POIs) com timeout total agressivo
   const [lat, lng] = coords;
@@ -2051,7 +2122,7 @@ async function runSearch(name, coords, opts = {}) {
     renderResults(); // mostra ja' tudo dos curados
 
     // === FASE 2: enriquece com OSM em paralelo (nao bloqueia) ===
-    enrichWithOSM(coords, r);
+    enrichWithYelp(coords, r);
   } catch (err) {
     console.error(err);
     panel.innerHTML = `<div class="error-box">Erro: ${err.message}.</div>`;
